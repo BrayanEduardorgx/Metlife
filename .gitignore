@@ -1,0 +1,17 @@
+node_modules/
+.qa/
+backups/
+dist/
+coverage/
+*.log
+.env*
+*-credentials.json
+*-service-account.json
+firebase-debug.log
+database-debug.log
+ui-debug.log
+*.xlsx
+*.jpeg
+*.jpg
+*.png
+ejemplos/

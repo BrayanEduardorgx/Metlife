@@ -1,0 +1,22 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
+    "history": { ".indexOn": ["batch"] },
+    "records": {
+      ".indexOn": [
+        "_activeBatch",
+        "_activityAt",
+        "_directoryPending",
+        "_deletedAt",
+        "_search/poliza",
+        "_search/nombre",
+        "_search/rfc",
+        "_search/curp"
+      ],
+      "$record": {
+        ".validate": "newData.child('_schema').val() === 1 && (newData.child('_deletedAt').isNumber() || (newData.child('_activeBatch').isString() && newData.child('_search').hasChildren(['poliza', 'nombre', 'rfc', 'curp'])))"
+      }
+    }
+  }
+}
