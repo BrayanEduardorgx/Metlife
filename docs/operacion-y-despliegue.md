@@ -1,5 +1,13 @@
 # Desarrollo, permisos y respaldos
 
+## Publicación del 6 de septiembre de 2026
+
+Hosting y las reglas se publicaron en https://metlife-6d467.web.app. Versión de Hosting: `49e52189484f77f7`.
+
+Las tres cuentas existentes conservaron su acceso completo mediante el rol administrador. El inicio de sesión refresca los claims antes de consultar los datos para reconocer los permisos nuevos. Nuevas cuentas necesitan un rol asignado. Se verificaron los archivos publicados contra sus copias locales, 50 pruebas de lógica y 8 de integración con emuladores.
+
+Los respaldos diarios todavía necesitan las credenciales, clave y bucket descritos más abajo; esta publicación no los activa.
+
 ## Ejecutar y verificar
 
 En Windows PowerShell usar `npm.cmd` si la política de ejecución bloquea `npm.ps1`.

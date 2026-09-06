@@ -9,7 +9,7 @@
       return (capabilities[metlifeState.role] || []).includes(action);
     },
     async load(user) {
-      const token = await user.getIdTokenResult?.();
+      const token = await user.getIdTokenResult?.(true);
       metlifeState.role = token ? token.claims.role : 'admin';
       return metlifeState.role;
     },
