@@ -1,0 +1,28 @@
+name: Respaldo diario verificado
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  backup:
+    if: vars.METLIFE_BACKUPS_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.METLIFE_BACKUP_CREDENTIALS }}'
+      - run: npm run backup
+        env:
+          METLIFE_PROJECT: '${{ vars.METLIFE_PROJECT }}'
+          METLIFE_DATABASE_URL: '${{ vars.METLIFE_DATABASE_URL }}'
+          METLIFE_BACKUP_BUCKET: '${{ vars.METLIFE_BACKUP_BUCKET }}'
+          METLIFE_BACKUP_KEY: '${{ secrets.METLIFE_BACKUP_KEY }}'

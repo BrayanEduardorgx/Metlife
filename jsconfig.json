@@ -1,1 +1,13 @@
-{"compilerOptions":{"allowJs":true,"checkJs":true,"noEmit":true,"target":"ES2022","module":"CommonJS","lib":["ES2022","DOM"],"skipLibCheck":true,"strict":true},"include":["modules/contracts.js"]}
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "target": "ES2022",
+    "module": "CommonJS",
+    "lib": ["ES2022", "DOM"],
+    "skipLibCheck": true,
+    "strict": true
+  },
+  "include": ["modules/contracts.js", "modules/globals.d.ts"]
+}

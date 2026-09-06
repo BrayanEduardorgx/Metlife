@@ -1,6 +1,6 @@
 # Ideas para las siguientes mejoras
 
-Estas propuestas son futuras; no se han implementado como parte de las cuatro mejoras de rendimiento y búsqueda.
+Esta es la lista original de propuestas. Los 27 puntos seleccionados después se detallan en [mejoras implementadas](mejoras-implementadas.md); consultar ese documento para distinguir implementación y configuración pendiente.
 
 ## Código y mantenimiento
 

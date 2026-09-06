@@ -18,7 +18,11 @@
       "ejemplo poliza.jpeg",
       "ejemplos/**",
       "**/ejemplo*",
-      "database.rules.json"
+      "database.rules.json",
+      "package*.json",
+      "jsconfig.json",
+      "eslint.config.mjs",
+      "backups/**"
     ],
     "headers": [
       {
@@ -34,5 +38,21 @@
   },
   "database": {
     "rules": "database.rules.json"
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "database": {
+      "port": 9000
+    },
+    "hosting": {
+      "port": 5000
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    },
+    "singleProjectMode": true
   }
 }

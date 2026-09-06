@@ -9,10 +9,12 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc -p jsconfig.json",
     "check": "npm run lint && npm run typecheck && npm test",
-    "test:rules": "firebase emulators:exec --only database --project demo-metlife \"node --test tests/rules/*.test.cjs\"",
+    "test:rules": "node scripts/test-rules.cjs",
     "dev": "firebase emulators:start --only hosting,auth,database --project demo-metlife",
     "backup": "node scripts/backup.cjs",
-    "role": "node scripts/set-role.cjs"
+    "role": "node scripts/set-role.cjs",
+    "test:browser": "node tests/browser/workspace.cjs",
+    "deploy:production": "npm run check && npm run test:rules && firebase deploy --project production"
   },
   "devDependencies": {
     "@eslint/js": "9.39.1",
@@ -23,6 +25,7 @@
     "firebase": "12.6.0",
     "firebase-admin": "13.6.0",
     "firebase-tools": "14.26.0",
-    "@firebase/rules-unit-testing": "5.0.0"
+    "@firebase/rules-unit-testing": "5.0.0",
+    "playwright": "1.58.2"
   }
 }

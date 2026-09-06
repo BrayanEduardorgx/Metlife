@@ -1,130 +1,667 @@
 <!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#008f8c" />
-  <title>MetLife | Archivador</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260905-3" />
-</head>
-<body>
-  <section id="login" class="login-screen">
-    <div class="login-art" aria-label="Espacio para imagen personalizada">
-      <div class="brand brand-light"><span class="brand-mark">M</span><span class="login-brand-text">METLIFE</span></div>
-      <div class="hero-logo" aria-label="Logo MetLife">
-        <img src="metlife-logo-transparent.png" alt="MetLife" />
-      </div> 
-      <div class="art-caption"><span class="eyebrow">TU ESPACIO DE TRABAJO</span><h1>Protegemos lo que importa, dato por dato.</h1><p>Gestión simple, ordenada y segura para tu equipo.</p></div>
-    </div>
-    <div class="login-panel">
-      <form id="loginForm" class="login-card">
-        <div class="mobile-brand brand"><span class="brand-mark">M</span><span class="login-brand-text">METLIFE</span></div>
-        <span class="eyebrow blue">BIENVENIDO</span>
-        <h2>Inicia sesión</h2>
-        <p class="muted">Accede a tu espacio de gestión.</p>
-        <label>Correo electrónico<input id="loginUser" type="email" placeholder="admin1@gmail.com" required autocomplete="username" /></label>
-        <label>Contraseña<div class="password-wrap"><input id="loginPassword" type="password" placeholder="••••••••" required autocomplete="current-password" /><button id="passwordToggle" type="button" aria-label="Mostrar contraseña" title="Mostrar contraseña"><svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.8"/><path class="eye-slash" d="M4 4l16 16"/></svg></button></div></label>
-        <div class="login-row"><label class="check"><input id="rememberLogin" type="checkbox" checked /> Mantener sesión iniciada</label></div>
-        <p id="loginError" class="login-error" role="alert"></p>
-        <button class="primary wide" type="submit">Iniciar sesión <span>→</span></button>
-        <p class="demo-note">Acceso autorizado para administradores METLIFE</p>
-      </form>
-    </div>
-  </section>
-
-  <div id="app" class="app hidden">
-    <button id="sidebarBackdrop" class="sidebar-backdrop hidden" type="button" aria-label="Cerrar menú lateral" tabindex="-1"></button>
-    <aside id="sidebarPanel" class="sidebar open hidden" aria-label="Menú principal">
-      <div class="drawer-heading"><div class="brand brand-light"><span class="brand-mark">M</span><span>METLIFE</span></div><button id="sidebarClose" class="drawer-close" type="button" aria-label="Ocultar menú lateral" title="Ocultar menú lateral">×</button></div>
-      <nav><button id="sidebarArchivador" class="nav-item active" type="button">Archivador</button><button class="nav-item disabled" type="button" disabled>Más módulos pronto</button></nav>
-      <div class="sidebar-footer"><button id="logoutBtn" class="secondary" type="button" title="Cerrar sesión">Cerrar sesión</button></div>
-    </aside>
-    <main>
-      <header class="topbar"><button id="sidebarToggle" class="drawer-toggle" type="button" aria-controls="sidebarPanel" aria-expanded="false" aria-label="Mostrar menú lateral" title="Mostrar menú lateral"><span class="drawer-letter" aria-hidden="true">M</span></button><div><div class="topbar-titleline"><p class="eyebrow blue">GESTIÓN DE CLIENTES</p><button id="themeToggle" class="theme-toggle" type="button" aria-label="Cambiar modo de color" title="Cambiar modo de color"><span class="theme-icon">☾</span><span class="theme-label">Modo oscuro</span></button></div><h1>Archivador</h1></div><div class="header-actions"><span class="sync-pill" role="status"><i></i><span id="cloudStatus">Conectando a la nube…</span></span><span id="userName" class="header-user">ASESOR METLIFE</span><button id="newExcelBtn" class="secondary">＋ Nuevo Excel</button></div></header>
-
-      <section class="stats">
-        <article><div class="stat-icon blue-bg">▤</div><div><span>Registros en este Excel</span><strong id="recordCount">0</strong></div></article>
-        <article><div class="stat-icon green-bg">✓</div><div><span>Último guardado</span><strong id="lastSaved">—</strong></div></article>
-        <article><div class="stat-icon amber-bg">◷</div><div><span>Borrador</span><strong id="draftStatus">Sin cambios</strong></div></article>
-      </section>
-
-      <section class="scan-card" aria-labelledby="scanTitle">
-        <div class="section-heading"><div class="heading-icon" aria-hidden="true"><svg class="search-icon" viewBox="0 0 24 24"><path d="M8 4h8l2 3h3v13H3V7h3Z"/><circle cx="12" cy="13" r="4"/></svg></div><div><h2 id="scanTitle">Escanear documento</h2><p>Fotografía la hoja y revisa los datos antes de pasarlos al formulario.</p></div></div>
-        <div class="scan-body">
-          <p class="scan-hint">Coloca la hoja completa, derecha, con buena luz y sin reflejos. Deben verse las casillas superiores y «Lugar y fecha».</p>
-          <div class="scan-actions"><button id="openCameraBtn" class="primary" type="button">Abrir cámara</button><button id="nativeCameraBtn" class="secondary hidden" type="button">Tomar foto directamente</button><button id="uploadDocumentBtn" class="secondary" type="button">Subir foto</button><input id="documentFile" type="file" accept="image/jpeg,image/png,image/webp" hidden /><input id="cameraFile" type="file" accept="image/*" capture="environment" hidden /></div>
-          <div id="cameraPanel" class="camera-panel hidden"><label id="cameraSelector" class="camera-selector hidden">Cámara<select id="cameraSelect" aria-label="Elegir cámara"></select></label><video id="documentVideo" autoplay muted playsinline aria-label="Vista de la cámara"></video><div class="scan-actions"><button id="captureDocumentBtn" class="primary" type="button" disabled>Tomar foto</button><button id="closeCameraBtn" class="secondary" type="button">Cerrar cámara</button></div></div>
-          <div id="documentPreviewPanel" class="document-preview hidden"><img id="documentPreview" alt="Documento a analizar" /><div><p>Comprueba que la letra se vea clara antes de analizar.</p><label class="scan-mode">Lectura del formato de póliza<select id="scanReadingMode"><option value="fast">Rápida (recomendada)</option><option value="hand">Letra a mano (experimental)</option></select></label><p class="scan-hint">El formato Protección Futura 20 se busca automáticamente. La lectura de letra a mano es experimental y puede generar palabras incorrectas; su primera descarga puede tardar. Revisa siempre los resultados.</p><div class="scan-actions"><button id="rotateDocumentBtn" class="secondary" type="button">Girar foto</button><button id="removeDocumentBtn" class="secondary" type="button">Quitar foto</button><button id="analyzeDocumentBtn" class="primary" type="button">Analizar documento</button><button id="cancelScanBtn" class="secondary hidden" type="button">Cancelar lectura</button></div><p class="scan-hint">Lectura gratuita en el dispositivo que estés usando, desde cualquier lugar. Al guardar el registro, sus datos quedan en la nube. La foto no se conserva.</p></div></div>
-          <p id="scanStatus" class="scan-status" role="status" aria-live="polite">Toma una foto o selecciona una imagen para comenzar.</p>
-          <div id="scanReview" class="scan-review hidden"><h3>Revisa la lectura</h3><p>Corrige cualquier letra o número. Los campos vacíos se conservarán vacíos.</p><details class="scan-raw"><summary>Ver texto detectado</summary><textarea id="scanRawText" rows="6" readonly aria-label="Texto detectado en el documento"></textarea></details><div id="scanReviewFields" class="scan-review-fields"></div><label class="scan-remember"><input id="rememberScanZones" type="checkbox" checked /> Guardar zonas en la nube para hojas del mismo formato</label><button id="forgetScanZones" class="link-btn" type="button">Quitar zonas compartidas</button><p class="scan-hint">PRIMA, MEDIO, FECHA y TALÓN/CUENTA se completan manualmente. VENDIDA se intenta leer del nombre escrito arriba; puedes corregirlo o escribirlo manualmente. ESTATUS queda vacío.</p><div class="scan-actions"><button id="applyScanBtn" class="primary" type="button">Mostrar datos en el formulario</button><button id="scanTextBtn" class="secondary" type="button">Pasar a Autollenar con texto</button></div></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#008f8c" />
+    <title>MetLife | Archivador</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css?v=20260905-3" />
+  </head>
+  <body>
+    <section id="login" class="login-screen">
+      <div class="login-art" aria-label="Espacio para imagen personalizada">
+        <div class="brand brand-light">
+          <span class="brand-mark">M</span><span class="login-brand-text">METLIFE</span>
         </div>
-      </section>
+        <div class="hero-logo" aria-label="Logo MetLife">
+          <img src="metlife-logo-transparent.png" alt="MetLife" />
+        </div>
+        <div class="art-caption">
+          <span class="eyebrow">TU ESPACIO DE TRABAJO</span>
+          <h1>Protegemos lo que importa, dato por dato.</h1>
+          <p>Gestión simple, ordenada y segura para tu equipo.</p>
+        </div>
+      </div>
+      <div class="login-panel">
+        <form id="loginForm" class="login-card">
+          <div class="mobile-brand brand">
+            <span class="brand-mark">M</span><span class="login-brand-text">METLIFE</span>
+          </div>
+          <span class="eyebrow blue">BIENVENIDO</span>
+          <h2>Inicia sesión</h2>
+          <p class="muted">Accede a tu espacio de gestión.</p>
+          <label
+            >Correo electrónico<input
+              id="loginUser"
+              type="email"
+              placeholder="admin1@gmail.com"
+              required
+              autocomplete="username"
+          /></label>
+          <label
+            >Contraseña
+            <div class="password-wrap">
+              <input
+                id="loginPassword"
+                type="password"
+                placeholder="••••••••"
+                required
+                autocomplete="current-password"
+              /><button
+                id="passwordToggle"
+                type="button"
+                aria-label="Mostrar contraseña"
+                title="Mostrar contraseña"
+              >
+                <svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+                  <circle cx="12" cy="12" r="2.8" />
+                  <path class="eye-slash" d="M4 4l16 16" />
+                </svg>
+              </button></div
+          ></label>
+          <div class="login-row">
+            <label class="check"
+              ><input id="rememberLogin" type="checkbox" checked /> Mantener sesión iniciada</label
+            >
+          </div>
+          <p id="loginError" class="login-error" role="alert"></p>
+          <button class="primary wide" type="submit">Iniciar sesión <span>→</span></button>
+          <p class="demo-note">Acceso autorizado para administradores METLIFE</p>
+        </form>
+      </div>
+    </section>
 
-      <section class="import-card">
-        <div class="section-heading"><div class="heading-icon">✦</div><div><h2>Autollenar con texto</h2><p>Pega los datos extraídos y los ordenaremos en el formulario.</p></div><button id="toggleImport" class="link-btn">Ocultar</button></div>
-        <div id="importBody" class="import-body"><textarea id="importText" rows="4" placeholder="Con etiquetas: PÓLIZA: ADX573, NOMBRE: JOSÉ CARLOS...&#10;Sin etiquetas: pega cada dato en un renglón y en el orden del formulario."></textarea><div class="import-footer"><small>Acepta etiquetas en cualquier orden o 16 valores ordenados por renglones, tabulaciones o |.</small><button id="parseBtn" class="dark-btn">✦ Completar formulario</button></div></div>
-      </section>
+    <div id="app" class="app hidden">
+      <button
+        id="sidebarBackdrop"
+        class="sidebar-backdrop hidden"
+        type="button"
+        aria-label="Cerrar menú lateral"
+        tabindex="-1"
+      ></button>
+      <aside id="sidebarPanel" class="sidebar open hidden" aria-label="Menú principal">
+        <div class="drawer-heading">
+          <div class="brand brand-light"><span class="brand-mark">M</span><span>METLIFE</span></div>
+          <button
+            id="sidebarClose"
+            class="drawer-close"
+            type="button"
+            aria-label="Ocultar menú lateral"
+            title="Ocultar menú lateral"
+          >
+            ×
+          </button>
+        </div>
+        <nav>
+          <button id="sidebarArchivador" class="nav-item active" type="button">Archivador</button
+          ><button class="nav-item disabled" type="button" disabled>Más módulos pronto</button>
+        </nav>
+        <div class="sidebar-footer">
+          <button id="logoutBtn" class="secondary" type="button" title="Cerrar sesión">
+            Cerrar sesión
+          </button>
+        </div>
+      </aside>
+      <main>
+        <header class="topbar">
+          <button
+            id="sidebarToggle"
+            class="drawer-toggle"
+            type="button"
+            aria-controls="sidebarPanel"
+            aria-expanded="false"
+            aria-label="Mostrar menú lateral"
+            title="Mostrar menú lateral"
+          >
+            <span class="drawer-letter" aria-hidden="true">M</span>
+          </button>
+          <div>
+            <div class="topbar-titleline">
+              <p class="eyebrow blue">GESTIÓN DE CLIENTES</p>
+              <button
+                id="themeToggle"
+                class="theme-toggle"
+                type="button"
+                aria-label="Cambiar modo de color"
+                title="Cambiar modo de color"
+              >
+                <span class="theme-icon">☾</span><span class="theme-label">Modo oscuro</span>
+              </button>
+            </div>
+            <h1>Archivador</h1>
+          </div>
+          <div class="header-actions">
+            <span class="sync-pill" role="status"
+              ><i></i><span id="cloudStatus">Conectando a la nube…</span></span
+            ><span id="userName" class="header-user">ASESOR METLIFE</span
+            ><button id="newExcelBtn" class="secondary">＋ Nuevo Excel</button>
+          </div>
+        </header>
 
-      <form id="clientForm" class="form-card" novalidate>
-        <div class="form-title"><div><p class="eyebrow blue">NUEVO REGISTRO</p><h2>Datos del cliente</h2></div><button type="button" id="clearBtn" class="link-btn">Limpiar formulario</button></div>
-<div id="recoveredDrafts" class="cloud-conflict hidden"><p>Se conservaron en la nube borradores que estaban en dispositivos anteriores. Escribe un nombre o póliza y elige una sugerencia para continuar esa captura. No se carga automáticamente.</p><label>Borrador recuperado<input id="recoveredDraftSelect" type="text" list="recoveredDraftSuggestions" autocomplete="off" placeholder="Buscar por nombre o póliza" /></label><datalist id="recoveredDraftSuggestions"></datalist><button id="restoreRecoveredDraft" class="secondary" type="button" disabled>Cargar borrador recuperado</button></div>
-        <div id="cloudConflict" class="cloud-conflict hidden" role="status"><p>El borrador cambió en otro dispositivo. Elige cuál conservar antes de continuar.</p><button id="loadCloudDraft" class="secondary" type="button">Cargar el de la nube</button><button id="keepOwnDraft" class="secondary" type="button">Guardar el de esta pantalla</button></div>
-        <div id="clientLookup" class="client-lookup hidden"><p id="lookupStatus" role="status" aria-live="polite"></p><div id="lookupResults" class="lookup-results"></div><button id="lookupMoreBtn" class="secondary hidden" type="button">Ver más coincidencias</button></div>
-        <div id="selectedClientActions" class="capture-context" hidden><strong id="selectedClientLocation"></strong><button id="editSelectedClient" class="edit-orange" type="button">Editar</button><button id="deleteSelectedClient" class="delete-red" type="button">Eliminar</button><button id="attachSelectedClient" class="secondary" type="button">Agregar a un Excel</button></div>
-        <div id="recordLocationNotice" class="location-notice" role="status" hidden></div>
-        <div class="capture-context"><strong id="currentExcelName"></strong><span id="archiveSyncStatus" role="status"></span><button id="retryArchiveBtn" class="link-btn" type="button" hidden>Reintentar actualización</button><span id="editingStatus"></span></div>
-        <div id="excelTaskStatus" class="capture-context" hidden><span id="excelTaskMessage" role="status"></span><button id="cancelExcelTask" class="secondary" type="button">Cancelar Excel</button></div>
-        <div id="voiceStatus" class="capture-context" hidden><span id="voiceStatusText" role="status"></span><button id="stopVoiceBtn" class="secondary" type="button">Detener dictado</button></div>
-        <div id="fields" class="fields"></div><div class="seller-tools"><button id="rememberSellerBtn" class="secondary" type="button">Guardar nombre de VENDIDA como frecuente</button><datalist id="sellerNames"></datalist></div>
-        <details class="capture-options"><summary>Notas y opciones de captura</summary><label>Notas internas (no se incluyen en Excel)<textarea id="internalNotes" maxlength="4000" rows="3" placeholder="Qué falta confirmar o recordar de este cliente"></textarea></label><label><input id="showSaveSummary" type="checkbox" /> Quiero ver el resumen antes de guardar</label><p>Ctrl + G: guardar · Enter: siguiente campo · Shift + Enter: campo anterior.</p></details>
-        <div id="undoPanel" class="capture-context" hidden><span id="undoDescription"></span><button id="undoBtn" type="button" class="secondary">Deshacer</button></div>
-        <div id="duplicateWarning" class="duplicate-warning" role="alert" aria-live="polite"></div>
-        <div id="saveReview" class="save-review" role="alert" hidden></div><div class="form-actions"><p><span>✓</span> Tu borrador se guarda en la nube para continuar con la misma cuenta desde otro dispositivo.</p><div class="form-action-buttons"><button id="downloadBtn" class="secondary download-btn" type="button">⇩ Descargar Excel</button><button id="savePendingBtn" class="secondary" type="button">Guardar como pendiente</button><button id="saveNextBtn" class="secondary" type="submit">Guardar y escanear siguiente</button><button class="primary save-btn" type="submit">Guardar registro <span>→</span></button></div></div>
-      </form>
+        <section class="stats">
+          <article>
+            <div class="stat-icon blue-bg">▤</div>
+            <div><span>Registros en este Excel</span><strong id="recordCount">0</strong></div>
+          </article>
+          <article>
+            <div class="stat-icon green-bg">✓</div>
+            <div><span>Último guardado</span><strong id="lastSaved">—</strong></div>
+          </article>
+          <article>
+            <div class="stat-icon amber-bg">◷</div>
+            <div><span>Borrador</span><strong id="draftStatus">Sin cambios</strong></div>
+          </article>
+        </section>
 
-      <section class="records-card"><div class="records-head"><div><p class="eyebrow blue">EXCEL ACTUAL</p><h2>Registros recientes</h2></div><label class="search">⌕ <input id="searchInput" placeholder="Buscar por póliza o nombre" /></label></div><div class="records-toolbar"><label>Mostrar <select id="copiedFilter"><option value="all">Todos</option><option value="pending">Pendientes de copiar</option><option value="copied">Copiados</option></select></label><label class="select-all"><input id="selectAllRecords" type="checkbox" /><span id="selectAllLabel">Seleccionar todos</span></label><span id="selectionCount" role="status" aria-live="polite">0 seleccionados</span><button id="archiveRecordsBtn" class="secondary" type="button">Guardar Excel en historial</button><button id="copyRecordsBtn" class="secondary" type="button" disabled>Copiar seleccionados</button><p>Solo datos, sin encabezados: columnas A–Q, una fila por registro, en orden de guardado. Pega desde la columna A en Excel.</p></div><div class="table-wrap"><table><thead><tr><th scope="col">SELECCIÓN</th><th>PÓLIZA</th><th>NOMBRE</th><th>NEGOCIO</th><th>SUMA ASEGURADA</th><th>PRIMA</th><th>FECHA</th><th>RFC</th><th>COMUNIDAD</th><th>COPIADO</th><th>ACCIONES</th></tr></thead><tbody id="recordsBody"></tbody></table><div id="emptyState" class="empty"><span>▤</span><h3>Aún no hay registros</h3><p>Los clientes que guardes aparecerán aquí.</p></div></div><div class="records-pagination"><span id="recordsPageStatus"></span><button id="recordsMoreBtn" class="secondary hidden" type="button">Mostrar más registros</button></div></section>
+        <section class="scan-card" aria-labelledby="scanTitle">
+          <div class="section-heading">
+            <div class="heading-icon" aria-hidden="true">
+              <svg class="search-icon" viewBox="0 0 24 24">
+                <path d="M8 4h8l2 3h3v13H3V7h3Z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+            </div>
+            <div>
+              <h2 id="scanTitle">Escanear documento</h2>
+              <p>Fotografía la hoja y revisa los datos antes de pasarlos al formulario.</p>
+            </div>
+          </div>
+          <div class="scan-body">
+            <p class="scan-hint">
+              Coloca la hoja completa, derecha, con buena luz y sin reflejos. Deben verse las
+              casillas superiores y «Lugar y fecha».
+            </p>
+            <div class="scan-actions">
+              <button id="openCameraBtn" class="primary" type="button">Abrir cámara</button
+              ><button id="nativeCameraBtn" class="secondary hidden" type="button">
+                Tomar foto directamente</button
+              ><button id="uploadDocumentBtn" class="secondary" type="button">Subir foto</button
+              ><input
+                id="documentFile"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                hidden
+              /><input id="cameraFile" type="file" accept="image/*" capture="environment" hidden />
+            </div>
+            <div id="cameraPanel" class="camera-panel hidden">
+              <label id="cameraSelector" class="camera-selector hidden"
+                >Cámara<select id="cameraSelect" aria-label="Elegir cámara"></select></label
+              ><video
+                id="documentVideo"
+                autoplay
+                muted
+                playsinline
+                aria-label="Vista de la cámara"
+              ></video>
+              <div class="scan-actions">
+                <button id="captureDocumentBtn" class="primary" type="button" disabled>
+                  Tomar foto</button
+                ><button id="closeCameraBtn" class="secondary" type="button">Cerrar cámara</button>
+              </div>
+            </div>
+            <div id="documentPreviewPanel" class="document-preview hidden">
+              <img id="documentPreview" alt="Documento a analizar" />
+              <div>
+                <p>Comprueba que la letra se vea clara antes de analizar.</p>
+                <label class="scan-mode"
+                  >Lectura del formato de póliza<select id="scanReadingMode">
+                    <option value="fast">Rápida (recomendada)</option>
+                    <option value="hand">Letra a mano (experimental)</option>
+                  </select></label
+                >
+                <p class="scan-hint">
+                  El formato Protección Futura 20 se busca automáticamente. La lectura de letra a
+                  mano es experimental y puede generar palabras incorrectas; su primera descarga
+                  puede tardar. Revisa siempre los resultados.
+                </p>
+                <div class="scan-actions">
+                  <button id="rotateDocumentBtn" class="secondary" type="button">Girar foto</button
+                  ><button id="removeDocumentBtn" class="secondary" type="button">
+                    Quitar foto</button
+                  ><button id="analyzeDocumentBtn" class="primary" type="button">
+                    Analizar documento</button
+                  ><button id="cancelScanBtn" class="secondary hidden" type="button">
+                    Cancelar lectura
+                  </button>
+                </div>
+                <p class="scan-hint">
+                  Lectura gratuita en el dispositivo que estés usando, desde cualquier lugar. Al
+                  guardar el registro, sus datos quedan en la nube. La foto no se conserva.
+                </p>
+              </div>
+            </div>
+            <p id="scanStatus" class="scan-status" role="status" aria-live="polite">
+              Toma una foto o selecciona una imagen para comenzar.
+            </p>
+            <div id="scanReview" class="scan-review hidden">
+              <h3>Revisa la lectura</h3>
+              <p>Corrige cualquier letra o número. Los campos vacíos se conservarán vacíos.</p>
+              <details class="scan-raw">
+                <summary>Ver texto detectado</summary>
+                <textarea
+                  id="scanRawText"
+                  rows="6"
+                  readonly
+                  aria-label="Texto detectado en el documento"
+                ></textarea>
+              </details>
+              <div id="scanReviewFields" class="scan-review-fields"></div>
+              <label class="scan-remember"
+                ><input id="rememberScanZones" type="checkbox" checked /> Guardar zonas en la nube
+                para hojas del mismo formato</label
+              ><button id="forgetScanZones" class="link-btn" type="button">
+                Quitar zonas compartidas
+              </button>
+              <p class="scan-hint">
+                PRIMA, MEDIO, FECHA y TALÓN/CUENTA se completan manualmente. VENDIDA se intenta leer
+                del nombre escrito arriba; puedes corregirlo o escribirlo manualmente. ESTATUS queda
+                vacío.
+              </p>
+              <div class="scan-actions">
+                <button id="applyScanBtn" class="primary" type="button">
+                  Mostrar datos en el formulario</button
+                ><button id="scanTextBtn" class="secondary" type="button">
+                  Pasar a Autollenar con texto
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <section class="history-card">
-        <div class="history-head"><div><p class="eyebrow blue">ARCHIVO PERMANENTE</p><h2>Historial de Excel</h2><p>Guarda el Excel actual con un nombre antes de comenzar uno nuevo.</p></div></div>
-        <div class="history-save"><label for="historyName">Nombre del archivo</label><div><input id="historyName" type="text" placeholder="EJ. CLIENTES LUNES 1 DE SEPTIEMBRE" maxlength="80" /><button id="saveHistoryBtn" class="primary" type="button">▣ Guardar en historial</button></div><small id="historyHint">El archivo debe tener al menos un registro.</small></div>
-        <div id="historyList" class="history-list"></div>
-        <div id="historyEmpty" class="history-empty"><span>□</span><div><strong>Tu historial está vacío</strong><p>Los archivos guardados aparecerán aquí para consultarlos otro día.</p></div></div>
-      </section>
-      <section class="workflow-card" aria-label="Herramientas de trabajo">
-        <details open><summary>Pendientes en la nube <span id="pendingCount">0</span></summary><p>Puedes conservar varias capturas incompletas. Las fotos no se guardan. ESTATUS de Excel permanece vacío.</p><div id="pendingList" class="workflow-list"></div></details>
-        <details><summary>Nombres frecuentes de VENDIDA</summary><p>Elige un nombre al escribir en VENDIDA o agrega uno nuevo con el botón del formulario.</p><div id="sellersList" class="workflow-list"></div></details>
-        <details id="trashPanel"><summary>Papelera · recuperar hasta 3 meses</summary><p>Restaura registros eliminados en su archivo original. El plazo empieza el día que los eliminas.</p><button id="refreshTrashBtn" class="secondary" type="button">Actualizar papelera</button><p id="trashStatus" role="status"></p><div id="trashList" class="workflow-list"></div><button id="trashMoreBtn" class="secondary hidden" type="button">Cargar más</button></details>
-      </section>
-    </main>
-  </div>
-  <dialog id="scanCropDialog" class="scan-crop-dialog" aria-labelledby="cropTitle"><div class="crop-heading"><h2 id="cropTitle">Leer una zona</h2><button id="closeCropBtn" class="secondary" type="button">Cerrar</button></div><p>Arrastra sobre una sola línea escrita a mano, sin incluir la etiqueta impresa. Ajusta el rectángulo si hace falta.</p><div class="crop-surface"><canvas id="cropCanvas" aria-label="Selecciona con el dedo o el ratón la línea que quieres leer"></canvas></div><div class="crop-coordinates"><label>Izquierda (%)<input id="cropLeft" type="number" min="0" max="99" step="0.1" /></label><label>Arriba (%)<input id="cropTop" type="number" min="0" max="99" step="0.1" /></label><label>Ancho (%)<input id="cropWidth" type="number" min="1" max="100" step="0.1" /></label><label>Alto (%)<input id="cropHeight" type="number" min="1" max="100" step="0.1" /></label></div><p class="scan-hint">La lectura de letra a mano es experimental. El modelo se descarga una vez y trabaja en tu dispositivo; la primera descarga puede tardar.</p><p id="cropStatus" role="status"></p><div class="scan-actions"><button id="readCropBtn" class="primary" type="button">Leer letra a mano</button><button id="readCropFastBtn" class="secondary" type="button">Lectura rápida</button></div></dialog>
-  <dialog id="duplicateDialog" class="workflow-dialog" aria-labelledby="duplicateTitle"><h2 id="duplicateTitle">Este cliente ya tiene registros</h2><p>Compara los datos. Actualizar modifica el registro elegido en su archivo original; guardar otra póliza crea una fila nueva en el archivo actual.</p><label>Registro encontrado<select id="duplicateChoice"></select></label><div class="table-wrap"><table><thead><tr><th>Dato</th><th>Registro anterior</th><th>Formulario actual</th></tr></thead><tbody id="duplicateComparison"></tbody></table></div><div class="workflow-actions"><button id="duplicateCancel" class="secondary" type="button">Cancelar</button><button id="duplicateUpdate" class="secondary" type="button">Actualizar este registro</button><button id="duplicateCreate" class="primary" type="button">Guardar otra póliza</button></div></dialog>
-  <dialog id="pendingDialog" class="workflow-dialog" aria-labelledby="pendingTitle"><h2 id="pendingTitle">Guardar captura pendiente</h2><label>Nombre para identificarla<input id="pendingName" maxlength="100" /></label><label>Qué falta revisar<input id="pendingReason" maxlength="180" placeholder="EJ. FALTA PRIMA O REVISAR TELÉFONO" /></label><p id="pendingStatus" role="status"></p><div class="workflow-actions"><button id="pendingCancel" class="secondary" type="button">Cancelar</button><button id="pendingConfirm" class="primary" type="button">Guardar pendiente en la nube</button></div></dialog>
-  <dialog id="scanImageDialog" class="workflow-dialog image-dialog" aria-labelledby="scanImageTitle"><h2 id="scanImageTitle">Detalle del documento</h2><button id="closeScanImage" class="secondary" type="button">Cerrar</button><img id="scanImageLarge" alt="Recorte del documento para comprobar el dato" /></dialog>
-  <div id="toast" class="toast" role="status"><span>✓</span><div><strong>Registro guardado</strong><small>Los datos se agregaron al Excel actual.</small></div></div>
+        <section class="import-card">
+          <div class="section-heading">
+            <div class="heading-icon">✦</div>
+            <div>
+              <h2>Autollenar con texto</h2>
+              <p>Pega los datos extraídos y los ordenaremos en el formulario.</p>
+            </div>
+            <button id="toggleImport" class="link-btn">Ocultar</button>
+          </div>
+          <div id="importBody" class="import-body">
+            <textarea
+              id="importText"
+              rows="4"
+              placeholder="Con etiquetas: PÓLIZA: ADX573, NOMBRE: JOSÉ CARLOS...&#10;Sin etiquetas: pega cada dato en un renglón y en el orden del formulario."
+            ></textarea>
+            <div class="import-footer">
+              <small
+                >Acepta etiquetas en cualquier orden o 16 valores ordenados por renglones,
+                tabulaciones o |.</small
+              ><button id="parseBtn" class="dark-btn">✦ Completar formulario</button>
+            </div>
+          </div>
+        </section>
 
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
-  <script src="firebase-config.js"></script>
-  <script src="archive-core.js"></script>
-  <script src="archive-store.js"></script>
-  <script src="client-directory.js"></script>
-  <script src="excel-service.js"></script>
-  <script src="cloud-store.js"></script>
-  <script src="form-core.js"></script>
-  <script src="form-enhancements.js"></script>
-  <script src="app.js"></script>
-  <script src="document-core.js"></script>
-  <script src="document-template.js"></script>
-  <script src="client-lookup.js"></script>
-  <script src="document-scanner.js"></script>
-  <script src="workflow.js"></script>
-  <script src="productivity.js"></script>
-  <script src="client-records.js"></script>
-  <script src="bulk-clients.js"></script>
-</body>
+        <form id="clientForm" class="form-card" novalidate>
+          <div class="form-title">
+            <div>
+              <p class="eyebrow blue">NUEVO REGISTRO</p>
+              <h2>Datos del cliente</h2>
+            </div>
+            <button type="button" id="clearBtn" class="link-btn">Limpiar formulario</button>
+          </div>
+          <div id="recoveredDrafts" class="cloud-conflict hidden">
+            <p>
+              Se conservaron en la nube borradores que estaban en dispositivos anteriores. Escribe
+              un nombre o póliza y elige una sugerencia para continuar esa captura. No se carga
+              automáticamente.
+            </p>
+            <label
+              >Borrador recuperado<input
+                id="recoveredDraftSelect"
+                type="text"
+                list="recoveredDraftSuggestions"
+                autocomplete="off"
+                placeholder="Buscar por nombre o póliza" /></label
+            ><datalist id="recoveredDraftSuggestions"></datalist
+            ><button id="restoreRecoveredDraft" class="secondary" type="button" disabled>
+              Cargar borrador recuperado
+            </button>
+          </div>
+          <div id="cloudConflict" class="cloud-conflict hidden" role="status">
+            <p>El borrador cambió en otro dispositivo. Elige cuál conservar antes de continuar.</p>
+            <button id="loadCloudDraft" class="secondary" type="button">Cargar el de la nube</button
+            ><button id="keepOwnDraft" class="secondary" type="button">
+              Guardar el de esta pantalla
+            </button>
+          </div>
+          <div id="clientLookup" class="client-lookup hidden">
+            <p id="lookupStatus" role="status" aria-live="polite"></p>
+            <div id="lookupResults" class="lookup-results"></div>
+            <button id="lookupMoreBtn" class="secondary hidden" type="button">
+              Ver más coincidencias
+            </button>
+          </div>
+          <div id="selectedClientActions" class="capture-context" hidden>
+            <strong id="selectedClientLocation"></strong
+            ><button id="editSelectedClient" class="edit-orange" type="button">Editar</button
+            ><button id="deleteSelectedClient" class="delete-red" type="button">Eliminar</button
+            ><button id="attachSelectedClient" class="secondary" type="button">
+              Agregar a un Excel
+            </button>
+          </div>
+          <div id="recordLocationNotice" class="location-notice" role="status" hidden></div>
+          <div class="capture-context">
+            <strong id="currentExcelName"></strong><span id="archiveSyncStatus" role="status"></span
+            ><button id="retryArchiveBtn" class="link-btn" type="button" hidden>
+              Reintentar actualización</button
+            ><span id="editingStatus"></span>
+          </div>
+          <div id="excelTaskStatus" class="capture-context" hidden>
+            <span id="excelTaskMessage" role="status"></span
+            ><button id="cancelExcelTask" class="secondary" type="button">Cancelar Excel</button>
+          </div>
+          <div id="voiceStatus" class="capture-context" hidden>
+            <span id="voiceStatusText" role="status"></span
+            ><button id="stopVoiceBtn" class="secondary" type="button">Detener dictado</button>
+          </div>
+          <div id="fields" class="fields"></div>
+          <div class="seller-tools">
+            <button id="rememberSellerBtn" class="secondary" type="button">
+              Guardar nombre de VENDIDA como frecuente</button
+            ><datalist id="sellerNames"></datalist>
+          </div>
+          <details class="capture-options">
+            <summary>Notas y opciones de captura</summary>
+            <label
+              >Notas internas (no se incluyen en Excel)<textarea
+                id="internalNotes"
+                maxlength="4000"
+                rows="3"
+                placeholder="Qué falta confirmar o recordar de este cliente"
+              ></textarea></label
+            ><label
+              ><input id="showSaveSummary" type="checkbox" /> Quiero ver el resumen antes de
+              guardar</label
+            >
+            <p>Ctrl + G: guardar · Enter: siguiente campo · Shift + Enter: campo anterior.</p>
+          </details>
+          <div id="undoPanel" class="capture-context" hidden>
+            <span id="undoDescription"></span
+            ><button id="undoBtn" type="button" class="secondary">Deshacer</button>
+          </div>
+          <div
+            id="duplicateWarning"
+            class="duplicate-warning"
+            role="alert"
+            aria-live="polite"
+          ></div>
+          <div id="saveReview" class="save-review" role="alert" hidden></div>
+          <div class="form-actions">
+            <p>
+              <span>✓</span> Tu borrador se guarda en la nube para continuar con la misma cuenta
+              desde otro dispositivo.
+            </p>
+            <div class="form-action-buttons">
+              <button id="downloadBtn" class="secondary download-btn" type="button">
+                ⇩ Descargar Excel</button
+              ><button id="savePendingBtn" class="secondary" type="button">
+                Guardar como pendiente</button
+              ><button id="saveNextBtn" class="secondary" type="submit">
+                Guardar y escanear siguiente</button
+              ><button class="primary save-btn" type="submit">
+                Guardar registro <span>→</span>
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <section class="records-card">
+          <div class="records-head">
+            <div>
+              <p class="eyebrow blue">EXCEL ACTUAL</p>
+              <h2>Registros recientes</h2>
+            </div>
+            <label class="search"
+              >⌕ <input id="searchInput" placeholder="Buscar por póliza o nombre"
+            /></label>
+          </div>
+          <div class="records-toolbar">
+            <label
+              >Mostrar
+              <select id="copiedFilter">
+                <option value="all">Todos</option>
+                <option value="pending">Pendientes de copiar</option>
+                <option value="copied">Copiados</option>
+              </select></label
+            ><label class="select-all"
+              ><input id="selectAllRecords" type="checkbox" /><span id="selectAllLabel"
+                >Seleccionar todos</span
+              ></label
+            ><span id="selectionCount" role="status" aria-live="polite">0 seleccionados</span
+            ><button id="archiveRecordsBtn" class="secondary" type="button">
+              Guardar Excel en historial</button
+            ><button id="copyRecordsBtn" class="secondary" type="button" disabled>
+              Copiar seleccionados
+            </button>
+            <p>
+              Solo datos, sin encabezados: columnas A–Q, una fila por registro, en orden de
+              guardado. Pega desde la columna A en Excel.
+            </p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">SELECCIÓN</th>
+                  <th>PÓLIZA</th>
+                  <th>NOMBRE</th>
+                  <th>NEGOCIO</th>
+                  <th>SUMA ASEGURADA</th>
+                  <th>PRIMA</th>
+                  <th>FECHA</th>
+                  <th>RFC</th>
+                  <th>COMUNIDAD</th>
+                  <th>COPIADO</th>
+                  <th>ACCIONES</th>
+                </tr>
+              </thead>
+              <tbody id="recordsBody"></tbody>
+            </table>
+            <div id="emptyState" class="empty">
+              <span>▤</span>
+              <h3>Aún no hay registros</h3>
+              <p>Los clientes que guardes aparecerán aquí.</p>
+            </div>
+          </div>
+          <div class="records-pagination">
+            <span id="recordsPageStatus"></span
+            ><button id="recordsMoreBtn" class="secondary hidden" type="button">
+              Mostrar más registros
+            </button>
+          </div>
+        </section>
+
+        <section class="history-card">
+          <div class="history-head">
+            <div>
+              <p class="eyebrow blue">ARCHIVO PERMANENTE</p>
+              <h2>Historial de Excel</h2>
+              <p>Guarda el Excel actual con un nombre antes de comenzar uno nuevo.</p>
+            </div>
+          </div>
+          <div class="history-save">
+            <label for="historyName">Nombre del archivo</label>
+            <div>
+              <input
+                id="historyName"
+                type="text"
+                placeholder="EJ. CLIENTES LUNES 1 DE SEPTIEMBRE"
+                maxlength="80"
+              /><button id="saveHistoryBtn" class="primary" type="button">
+                ▣ Guardar en historial
+              </button>
+            </div>
+            <small id="historyHint">El archivo debe tener al menos un registro.</small>
+          </div>
+          <div id="historyList" class="history-list"></div>
+          <div id="historyEmpty" class="history-empty">
+            <span>□</span>
+            <div>
+              <strong>Tu historial está vacío</strong>
+              <p>Los archivos guardados aparecerán aquí para consultarlos otro día.</p>
+            </div>
+          </div>
+        </section>
+        <section class="workflow-card" aria-label="Herramientas de trabajo">
+          <details open>
+            <summary>Pendientes en la nube <span id="pendingCount">0</span></summary>
+            <p>
+              Puedes conservar varias capturas incompletas. Las fotos no se guardan. ESTATUS de
+              Excel permanece vacío.
+            </p>
+            <div id="pendingList" class="workflow-list"></div>
+          </details>
+          <details>
+            <summary>Nombres frecuentes de VENDIDA</summary>
+            <p>
+              Elige un nombre al escribir en VENDIDA o agrega uno nuevo con el botón del formulario.
+            </p>
+            <div id="sellersList" class="workflow-list"></div>
+          </details>
+          <details id="trashPanel">
+            <summary>Papelera · recuperar hasta 3 meses</summary>
+            <p>
+              Restaura registros eliminados en su archivo original. El plazo empieza el día que los
+              eliminas.
+            </p>
+            <button id="refreshTrashBtn" class="secondary" type="button">
+              Actualizar papelera
+            </button>
+            <p id="trashStatus" role="status"></p>
+            <div id="trashList" class="workflow-list"></div>
+            <button id="trashMoreBtn" class="secondary hidden" type="button">Cargar más</button>
+          </details>
+        </section>
+      </main>
+    </div>
+    <dialog id="scanCropDialog" class="scan-crop-dialog" aria-labelledby="cropTitle">
+      <div class="crop-heading">
+        <h2 id="cropTitle">Leer una zona</h2>
+        <button id="closeCropBtn" class="secondary" type="button">Cerrar</button>
+      </div>
+      <p>
+        Arrastra sobre una sola línea escrita a mano, sin incluir la etiqueta impresa. Ajusta el
+        rectángulo si hace falta.
+      </p>
+      <div class="crop-surface">
+        <canvas
+          id="cropCanvas"
+          aria-label="Selecciona con el dedo o el ratón la línea que quieres leer"
+        ></canvas>
+      </div>
+      <div class="crop-coordinates">
+        <label>Izquierda (%)<input id="cropLeft" type="number" min="0" max="99" step="0.1" /></label
+        ><label>Arriba (%)<input id="cropTop" type="number" min="0" max="99" step="0.1" /></label
+        ><label>Ancho (%)<input id="cropWidth" type="number" min="1" max="100" step="0.1" /></label
+        ><label>Alto (%)<input id="cropHeight" type="number" min="1" max="100" step="0.1" /></label>
+      </div>
+      <p class="scan-hint">
+        La lectura de letra a mano es experimental. El modelo se descarga una vez y trabaja en tu
+        dispositivo; la primera descarga puede tardar.
+      </p>
+      <p id="cropStatus" role="status"></p>
+      <div class="scan-actions">
+        <button id="readCropBtn" class="primary" type="button">Leer letra a mano</button
+        ><button id="readCropFastBtn" class="secondary" type="button">Lectura rápida</button>
+      </div>
+    </dialog>
+    <dialog id="duplicateDialog" class="workflow-dialog" aria-labelledby="duplicateTitle">
+      <h2 id="duplicateTitle">Este cliente ya tiene registros</h2>
+      <p>
+        Compara los datos. Actualizar modifica el registro elegido en su archivo original; guardar
+        otra póliza crea una fila nueva en el archivo actual.
+      </p>
+      <label>Registro encontrado<select id="duplicateChoice"></select></label>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Dato</th>
+              <th>Registro anterior</th>
+              <th>Formulario actual</th>
+            </tr>
+          </thead>
+          <tbody id="duplicateComparison"></tbody>
+        </table>
+      </div>
+      <div class="workflow-actions">
+        <button id="duplicateCancel" class="secondary" type="button">Cancelar</button
+        ><button id="duplicateUpdate" class="secondary" type="button">
+          Actualizar este registro</button
+        ><button id="duplicateCreate" class="primary" type="button">Guardar otra póliza</button>
+      </div>
+    </dialog>
+    <dialog id="pendingDialog" class="workflow-dialog" aria-labelledby="pendingTitle">
+      <h2 id="pendingTitle">Guardar captura pendiente</h2>
+      <label>Nombre para identificarla<input id="pendingName" maxlength="100" /></label
+      ><label
+        >Qué falta revisar<input
+          id="pendingReason"
+          maxlength="180"
+          placeholder="EJ. FALTA PRIMA O REVISAR TELÉFONO"
+      /></label>
+      <p id="pendingStatus" role="status"></p>
+      <div class="workflow-actions">
+        <button id="pendingCancel" class="secondary" type="button">Cancelar</button
+        ><button id="pendingConfirm" class="primary" type="button">
+          Guardar pendiente en la nube
+        </button>
+      </div>
+    </dialog>
+    <dialog
+      id="scanImageDialog"
+      class="workflow-dialog image-dialog"
+      aria-labelledby="scanImageTitle"
+    >
+      <h2 id="scanImageTitle">Detalle del documento</h2>
+      <button id="closeScanImage" class="secondary" type="button">Cerrar</button
+      ><img id="scanImageLarge" alt="Recorte del documento para comprobar el dato" />
+    </dialog>
+    <div id="toast" class="toast" role="status">
+      <span>✓</span>
+      <div>
+        <strong>Registro guardado</strong><small>Los datos se agregaron al Excel actual.</small>
+      </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="modules/app-state.js"></script>
+    <script src="modules/field-schema.js"></script>
+    <script src="modules/operations.js"></script>
+    <script src="modules/access.js"></script>
+    <script src="modules/contracts.js"></script>
+    <script src="archive-core.js"></script>
+    <script src="archive-store.js"></script>
+    <script src="modules/search-core.js"></script>
+    <script src="modules/audit-store.js"></script>
+    <script src="client-directory.js"></script>
+    <script src="excel-service.js"></script>
+    <script src="cloud-store.js"></script>
+    <script src="form-core.js"></script>
+    <script src="form-enhancements.js"></script>
+    <script src="modules/capture-fields.js"></script>
+    <script src="modules/capture-import.js"></script>
+    <script src="modules/records-view.js"></script>
+    <script src="modules/excel-actions.js"></script>
+    <script src="app.js"></script>
+    <script src="client-lookup.js"></script>
+    <script src="workflow.js"></script>
+    <script src="productivity.js"></script>
+    <script src="client-records.js"></script>
+    <script src="bulk-clients.js"></script>
+    <script src="modules/scanner-loader.js"></script>
+    <script src="modules/workspace-tools.js"></script>
+    <script src="modules/accessibility.js"></script>
+  </body>
 </html>

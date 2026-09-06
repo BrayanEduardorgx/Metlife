@@ -1,8 +1,14 @@
 {
   "rules": {
-    ".read": "auth != null",
-    ".write": "auth != null",
-    "history": { ".indexOn": ["batch"] },
+    ".read": false,
+    ".write": false,
+    "history": {
+      ".indexOn": ["batch"],
+      ".read": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor' || auth.token.role === 'lector')",
+      "$file": {
+        ".write": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor') && newData.exists() && (auth.token.role === 'admin' || newData.child('_deletedAt').val() === data.child('_deletedAt').val())"
+      }
+    },
     "records": {
       ".indexOn": [
         "_activeBatch",
@@ -15,7 +21,53 @@
         "_search/curp"
       ],
       "$record": {
-        ".validate": "newData.child('_schema').val() === 1 && (newData.child('_deletedAt').isNumber() || (newData.child('_activeBatch').isString() && newData.child('_search').hasChildren(['poliza', 'nombre', 'rfc', 'curp'])))"
+        ".validate": "newData.child('_schema').val() === 1 && (newData.child('_deletedAt').isNumber() || (newData.child('_activeBatch').isString() && newData.child('_search').hasChildren(['poliza', 'nombre', 'rfc', 'curp'])))",
+        ".write": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor') && newData.exists() && (auth.token.role === 'admin' || newData.child('_deletedAt').val() === data.child('_deletedAt').val())"
+      },
+      ".read": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor' || auth.token.role === 'lector')"
+    },
+    "historyContent": {
+      ".read": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor' || auth.token.role === 'lector')",
+      ".write": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor')"
+    },
+    "clientDirectory": {
+      ".read": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor' || auth.token.role === 'lector')",
+      ".write": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor')"
+    },
+    "clientSearch": {
+      ".read": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor' || auth.token.role === 'lector')",
+      ".write": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor')"
+    },
+    "recordVersions": {
+      ".read": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor' || auth.token.role === 'lector')",
+      ".write": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor')"
+    },
+    "settings": {
+      ".read": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor' || auth.token.role === 'lector')",
+      ".write": "auth != null && auth.token.role === 'admin'",
+      "documentZones": {
+        ".write": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor')"
+      },
+      "sellers": {
+        ".write": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor')"
+      }
+    },
+    "workspaces": {
+      "$uid": {
+        ".read": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor' || auth.token.role === 'lector') && auth.uid === $uid",
+        ".write": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor' || auth.token.role === 'lector') && auth.uid === $uid"
+      }
+    },
+    "pendingDrafts": {
+      "$uid": {
+        ".read": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor' || auth.token.role === 'lector') && auth.uid === $uid",
+        ".write": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor' || auth.token.role === 'lector') && auth.uid === $uid"
+      }
+    },
+    "preferences": {
+      "$uid": {
+        ".read": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor' || auth.token.role === 'lector') && auth.uid === $uid",
+        ".write": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'editor' || auth.token.role === 'lector') && auth.uid === $uid"
       }
     }
   }

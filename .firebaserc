@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "metlife-6d467"
+    "default": "demo-metlife",
+    "production": "metlife-6d467"
   }
 }
