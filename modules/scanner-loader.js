@@ -5,12 +5,7 @@
     if (loaded) return Promise.resolve();
     if (job) return job;
     job = (async () => {
-      for (const src of [
-        'document-core.js',
-        'document-template.js',
-        'transcription-core.js',
-        'document-scanner.js',
-      ])
+      for (const src of ['document-core.js', 'document-template.js', 'document-scanner.js'])
         await new Promise((resolve, reject) => {
           const script = document.createElement('script');
           script.src = src;
@@ -28,13 +23,7 @@
     });
     return job;
   }
-  for (const id of [
-    'openCameraBtn',
-    'uploadDocumentBtn',
-    'nativeCameraBtn',
-    'copyInstructionsBtn',
-    'pasteDataBtn',
-  ])
+  for (const id of ['openCameraBtn', 'uploadDocumentBtn', 'nativeCameraBtn'])
     document.getElementById(id).addEventListener(
       'click',
       (event) => {

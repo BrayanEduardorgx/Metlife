@@ -190,52 +190,6 @@
                 hidden
               /><input id="cameraFile" type="file" accept="image/*" capture="environment" hidden />
             </div>
-            <div class="scan-actions">
-              <button id="copyInstructionsBtn" class="secondary" type="button">
-                Copiar instrucciones
-              </button>
-              <button id="pasteDataBtn" class="secondary" type="button">Pegar datos</button>
-            </div>
-            <p class="scan-hint">
-              Copia las instrucciones para acompañar tu foto al solicitar la transcripción. Después
-              pega la respuesta aquí para revisar cada campo. No se guarda ningún registro hasta que
-              tú lo guardes.
-            </p>
-            <dialog id="pasteDataDialog" class="workflow-dialog" aria-labelledby="pasteDataTitle">
-              <h2 id="pasteDataTitle">Pegar datos</h2>
-              <label for="pasteDataText">Pega la respuesta completa</label>
-              <textarea
-                id="pasteDataText"
-                rows="12"
-                spellcheck="false"
-                placeholder="Pega aquí los datos que copiaste"
-              ></textarea>
-              <p id="pasteDataStatus" role="status" aria-live="polite"></p>
-              <div class="scan-actions">
-                <button id="reviewPastedDataBtn" class="primary" type="button">
-                  Revisar datos
-                </button>
-                <button id="closePasteDataBtn" class="secondary" type="button">Cancelar</button>
-              </div>
-            </dialog>
-            <dialog
-              id="instructionsDialog"
-              class="workflow-dialog"
-              aria-labelledby="instructionsTitle"
-            >
-              <h2 id="instructionsTitle">Instrucciones</h2>
-              <p>
-                No se pudo copiar automáticamente. Selecciona este texto y cópialo para acompañar tu
-                foto.
-              </p>
-              <textarea
-                id="instructionsText"
-                rows="14"
-                readonly
-                aria-label="Instrucciones para transcribir el documento"
-              ></textarea>
-              <button id="closeInstructionsBtn" class="secondary" type="button">Cerrar</button>
-            </dialog>
             <div id="cameraPanel" class="camera-panel hidden">
               <label id="cameraSelector" class="camera-selector hidden"
                 >Cámara<select id="cameraSelect" aria-label="Elegir cámara"></select></label
@@ -302,7 +256,6 @@
                 ></textarea>
               </details>
               <div id="scanReviewFields" class="scan-review-fields"></div>
-              <div id="scanPasteNotes" class="scan-hint hidden" role="status"></div>
               <label class="scan-remember"
                 ><input id="rememberScanZones" type="checkbox" checked /> Guardar zonas en la nube
                 para hojas del mismo formato</label
