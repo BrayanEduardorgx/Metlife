@@ -28,7 +28,7 @@
                   : 'En la hoja: ' + def.label,
           },
         ]
-      : [];
+      : [{ ...field, source: 'Completar manualmente; no se extrae de la foto.' }];
   });
   let stream = null,
     cameraGeneration = 0,
@@ -49,6 +49,7 @@
   let detectedTemplate = null,
     proofs = {};
   let readingChecks = {};
+  let scanSources = {};
   let zones = window.metlifeCloud?.state.zones || {};
   window.addEventListener('metlife:zones', (event) => {
     zones = event.detail || {};
@@ -79,9 +80,9 @@
     $('#cancelScanBtn').classList.toggle('hidden', !value);
     document
       .querySelectorAll(
-        '.read-zone, .scan-review-field input, .scan-review-field select, .crop-coordinates input',
+        '.scan-review-field button, .scan-review-field input, .scan-review-field select, .crop-coordinates input',
       )
-      .forEach((input) => (input.disabled = value));
+      .forEach((input) => (input.disabled = value || input.id === 'scan-estatus'));
   }
   function stopCamera() {
     cameraGeneration++;
@@ -172,8 +173,10 @@
     return c;
   }
   function clearReview() {
+    stopVoice();
     proofs = {};
     readingChecks = {};
+    scanSources = {};
     detectedTemplate = null;
     reviewReady = false;
     $('#scanRawText').value = '';
@@ -606,6 +609,7 @@
   function attachFormProofs() {
     document.querySelectorAll('.field-proof').forEach((node) => node.remove());
     for (const field of fields) {
+      if (core.manual.includes(field.key)) continue;
       const keys = field.key === 'nombre' ? ['paterno', 'materno', 'nombres'] : [field.key];
       if (!keys.some((key) => reviewDefs.some((d) => d.key === key))) continue;
       const box = document.createElement('div');
@@ -621,6 +625,7 @@
     }
   }
   function showReview(values) {
+    stopVoice();
     const fragment = document.createDocumentFragment();
     reviewDefs.forEach((def) => {
       const box = document.createElement('div');
@@ -628,10 +633,11 @@
       const label = document.createElement('label');
       label.htmlFor = 'scan-' + def.key;
       label.textContent = def.label;
-      const input = document.createElement(def.key === 'negocio' ? 'select' : 'input');
+      const field = fields.find((f) => f.key === def.key) || { ...def, voice: 'words' };
+      const input = document.createElement(field.options ? 'select' : 'input');
       input.id = 'scan-' + def.key;
-      if (def.key === 'negocio')
-        for (const value of ['', 'NUEVA', 'INCREMENTO', 'INCLUSION']) {
+      if (field.options)
+        for (const value of field.options) {
           const option = document.createElement('option');
           option.value = value;
           option.textContent =
@@ -639,24 +645,128 @@
               ? 'PÓLIZA NUEVA'
               : value === 'INCLUSION'
                 ? 'INCLUSIÓN'
-                : value || 'REVISAR CASILLA';
+                : value || 'SELECCIONAR';
           input.append(option);
         }
       else input.type = 'text';
-      input.value = values[def.key] || '';
+      input.value = formatFieldValue(values[def.key] || '', field);
+      input.disabled = !!field.disabled;
+      input.placeholder = field.placeholder || '';
+      if (['money', 'decimal'].includes(field.type)) input.inputMode = 'decimal';
+      if (field.type === 'tel') {
+        input.inputMode = 'numeric';
+        input.maxLength = 10;
+      }
+      if (field.type === 'dateText') input.inputMode = 'numeric';
+      if (field.type === 'email') input.inputMode = 'email';
       input.autocomplete = 'off';
       box.append(label, input);
+      const controls = document.createElement('div');
+      controls.className = 'scan-field-tools';
+      const action = (text, callback) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'secondary';
+        button.textContent = text;
+        button.onclick = callback;
+        controls.append(button);
+        return button;
+      };
+      if (field.voice) {
+        const voice = action('🎙 Dictar', () =>
+          startVoice(def.key, { input, button: voice, field }),
+        );
+        voice.setAttribute('aria-label', 'Dictar ' + def.label);
+      }
+      if (!field.disabled)
+        action('Vaciar', () => {
+          stopVoice();
+          input.value = '';
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.focus();
+        });
+      if (['poliza', 'telefono', 'paterno', 'materno', 'nombres'].includes(def.key))
+        action('Buscar cliente', () => {
+          stopVoice();
+          window.metlifeLookupSearch(
+            ['poliza', 'telefono'].includes(def.key) ? def.key : 'nombre',
+            input.value,
+          );
+        }).title = 'Buscar en la nube y abrir los datos del cliente en el formulario';
+      box.append(controls);
+      if (def.key === 'poliza')
+        action('No tengo póliza', () => {
+          input.value = '';
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.focus();
+        });
+      if (['rfc', 'curp'].includes(def.key)) {
+        const suggestion = action('', () => {
+          if (
+            input.value &&
+            input.value !== suggestion.dataset.value &&
+            !confirm('¿Reemplazar este campo por la sugerencia?')
+          )
+            return;
+          input.value = suggestion.dataset.value;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.focus();
+        });
+        suggestion.id = 'scan-suggest-' + def.key;
+        suggestion.hidden = true;
+      }
+      if (def.key === 'correo') {
+        const list = document.createElement('datalist');
+        list.id = 'scan-email-suggestions';
+        input.setAttribute('list', list.id);
+        box.append(list);
+      }
+      const validation = document.createElement('small');
+      validation.className = 'scan-doubt';
+      validation.setAttribute('aria-live', 'polite');
+      box.append(validation);
+      const validate = () => {
+        const issue = MetlifeFormCore.issues({ [def.key]: input.value }, [field])[0];
+        validation.textContent = issue
+          ? issue.message + '. Puedes conservararlo incompleto; revisa antes de guardar.'
+          : '';
+      };
+      input.oninput = (event) => {
+        if (event.isComposing) return;
+        scanSources[def.key] = event.detail?.source || 'Manual';
+        if (!field.options) normalizeInput(input, field, true);
+        hint.textContent = input.value
+          ? 'Dato revisado por ti. Comprueba antes de guardar.'
+          : 'Campo vacío; puedes dejarlo así.';
+        hint.classList.remove('scan-doubt');
+        validate();
+        scanSuggestions();
+      };
+      input.addEventListener('compositionend', () =>
+        input.dispatchEvent(new Event('input', { bubbles: true })),
+      );
+      input.onkeydown = (event) => {
+        if (event.key !== 'Enter' || event.isComposing) return;
+        event.preventDefault();
+        const inputs = [
+          ...$('#scanReviewFields').querySelectorAll('input:not(:disabled), select:not(:disabled)'),
+        ];
+        inputs[inputs.indexOf(input) + (event.shiftKey ? -1 : 1)]?.focus();
+      };
+      validate();
       if (def.source) {
         const source = document.createElement('small');
         source.textContent = def.source;
         box.append(source);
       }
       const hint = document.createElement('small');
-      hint.textContent = input.value
-        ? 'Lectura sugerida: comprueba con la foto.'
-        : def.key === 'vendida'
-          ? 'Si no se distingue el nombre, escríbelo manualmente.'
-          : 'Sin lectura: puede estar vacío o ser ilegible.';
+      hint.textContent = core.manual.includes(def.key)
+        ? 'Completa este campo si corresponde.'
+        : input.value
+          ? 'Lectura sugerida: comprueba con la foto.'
+          : def.key === 'vendida'
+            ? 'Si no se distingue el nombre, escríbelo manualmente.'
+            : 'Sin lectura: puede estar vacío o ser ilegible.';
       if (
         (def.key === 'correo' && input.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value)) ||
         (def.key === 'telefono' && input.value && input.value.length !== 10)
@@ -677,13 +787,15 @@
           choose.textContent = 'Usar: ' + candidate;
           choose.onclick = () => {
             input.value = candidate;
-            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(
+              new CustomEvent('input', { bubbles: true, detail: { source: 'Escaneado revisado' } }),
+            );
             hint.textContent = 'Seleccionado por ti. Revisa antes de pasar al formulario.';
           };
           box.append(choose);
         }
       }
-      if (def.key !== 'negocio') {
+      if (def.key !== 'negocio' && core.definitions.some((d) => d.key === def.key)) {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'link-btn read-zone';
@@ -691,7 +803,7 @@
         button.onclick = () => openCrop(def);
         box.append(button);
       }
-      const photo = proofButton(def.key, def.label);
+      const photo = core.manual.includes(def.key) ? null : proofButton(def.key, def.label);
       if (photo) {
         const proof = document.createElement('div');
         proof.className = 'scan-proof';
@@ -701,27 +813,64 @@
       fragment.append(box);
     });
     $('#scanReviewFields').replaceChildren(fragment);
+    scanSuggestions();
     $('#scanReview').classList.remove('hidden');
     reviewReady = true;
+  }
+  function scanSuggestions() {
+    for (const [target, source] of [
+      ['rfc', 'curp'],
+      ['curp', 'rfc'],
+    ]) {
+      const button = el('scan-suggest-' + target);
+      if (!button) continue;
+      const value = MetlifeFormCore.prefix(el('scan-' + source)?.value || '');
+      button.hidden = !value;
+      button.dataset.value = value;
+      button.textContent = 'Usar ' + value + ' de ' + source.toUpperCase();
+    }
+    const list = el('scan-email-suggestions');
+    if (list) {
+      list.replaceChildren();
+      const user = el('scan-correo').value.split('@')[0];
+      if (user)
+        for (const domain of ['gmail.com', 'hotmail.com'])
+          list.append(new Option(user + '@' + domain));
+    }
   }
   function reviewed() {
     const values = {};
     reviewDefs.forEach((def) => (values[def.key] = el('scan-' + def.key)?.value || ''));
-    return core.valuesToForm(values);
+    const result = Object.fromEntries(fields.map((field) => [field.key, values[field.key] || '']));
+    result.nombre = ['paterno', 'materno', 'nombres']
+      .map((key) => values[key].trim())
+      .filter(Boolean)
+      .join(' ');
+    result.estatus = '';
+    return result;
   }
   function approveReplace() {
     return (
       !fields.some((f) => $('#' + f.key).value) ||
-      confirm(
-        '¿Reemplazar el formulario con esta lectura? Los campos que completarás manualmente quedarán vacíos.',
-      )
+      confirm('¿Reemplazar el formulario con los datos revisados del escaneo?')
     );
   }
   function applyReview() {
     if (busy || !reviewReady || !approveReplace()) return;
     const values = reviewed();
     clearForm();
-    fields.forEach((f) => setField(f.key, values[f.key] || '', false, 'Escaneado'));
+    fields.forEach((f) =>
+      setField(
+        f.key,
+        values[f.key] || '',
+        false,
+        f.key === 'nombre'
+          ? ['paterno', 'materno', 'nombres'].some((key) => scanSources[key])
+            ? 'Escaneado y corregido'
+            : 'Escaneado'
+          : scanSources[f.key] || (core.manual.includes(f.key) ? 'Manual' : 'Escaneado'),
+      ),
+    );
     attachFormProofs();
     saveDraft();
     checkDuplicate();

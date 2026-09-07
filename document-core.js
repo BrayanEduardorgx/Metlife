@@ -340,12 +340,9 @@
       candidates = [...new Set([a, b].filter(Boolean))];
     const compare = (value) =>
       ['suma', 'primaExcedente'].includes(key) && value ? String(Number(value)) : normalize(value);
-    const agrees = !!a && compare(a) === compare(b),
-      sensitive = ['suma', 'primaExcedente', 'telefono', 'rfc', 'curp', 'poliza', 'fecha'].includes(
-        key,
-      );
+    const agrees = !!a && compare(a) === compare(b);
     return {
-      value: hand !== undefined && sensitive && !agrees ? '' : a || b,
+      value: hand !== undefined && !agrees ? '' : a || b,
       candidates,
       doubt: hand !== undefined && !agrees,
     };

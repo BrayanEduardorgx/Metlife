@@ -151,6 +151,39 @@
       : String(fraction).padStart(2, '0');
     return whole + '.' + decimal;
   }
-  root.MetlifeFormCore = { normalize, prefix, issues, insert, spokenNumber };
+  function spokenDate(value) {
+    const text = plain(value).toLowerCase();
+    const months = [
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
+    ];
+    const named = text.match(
+      /^(.*?)\s+(?:de\s+)?(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+(?:de[l]?\s+)?(.+)$/,
+    );
+    if (named) {
+      const day = spokenNumber(named[1]),
+        year = spokenNumber(named[3]);
+      if (!day || !year) return '';
+      return (
+        day.padStart(2, '0') +
+        '/' +
+        String(months.indexOf(named[2]) + 1).padStart(2, '0') +
+        '/' +
+        year
+      );
+    }
+    return text.replace(/\b(guion|diagonal|barra)\b/g, '/').replace(/[^\d/.-]/g, '');
+  }
+  root.MetlifeFormCore = { normalize, prefix, issues, insert, spokenNumber, spokenDate };
   if (typeof module !== 'undefined') module.exports = root.MetlifeFormCore;
 })(typeof window === 'undefined' ? globalThis : window);

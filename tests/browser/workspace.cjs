@@ -378,7 +378,12 @@ const server = http.createServer(async (req, res) => {
       })[1][0],
       'DESPUES DE CANCELAR',
     );
+    await require('./scanner-fields.cjs')(page);
+    await page.locator('#scanReview').evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await page.screenshot({ path: path.join(root, '.qa', 'scanner-fields-desktop.png') });
     await page.setViewportSize({ width: 390, height: 844 });
+    await page.locator('#scanReview').evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await page.screenshot({ path: path.join(root, '.qa', 'scanner-fields-mobile.png') });
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await page.screenshot({ path: path.join(root, '.qa', 'workspace-mobile.png'), fullPage: true });
     assert.deepEqual(errors, []);

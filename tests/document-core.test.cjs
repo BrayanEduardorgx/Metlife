@@ -9,6 +9,9 @@ test('conflicting handwritten amounts and identifiers require review instead of 
   assert.equal(core.reconcileReadings('suma', '100,000', '100000.00').value, '100000');
   assert.equal(core.reconcileReadings('rfc', 'ABCD010101XYZ', 'ABCD010101XY2').value, '');
   assert.equal(core.reconcileReadings('correo', 'unreadable', '').value, '');
+  const name = core.reconcileReadings('paterno', 'PÉREZ', 'PERES');
+  assert.equal(name.value, '');
+  assert.deepEqual(name.candidates, ['PÉREZ', 'PERES']);
 });
 test('application date comes from the handwritten footer, never date of birth', () => {
   assert.equal(

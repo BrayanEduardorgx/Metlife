@@ -28,11 +28,12 @@ function renderRecoveredDrafts(recovered) {
   });
   document.getElementById('restoreRecoveredDraft').disabled = !recoveredDraftEntry();
 }
-function normalizeInput(input, field) {
+function normalizeInput(input, field, local = false) {
   const raw = input.value,
     start = input.selectionStart,
     end = input.selectionEnd;
-  setField(field.key, raw, false);
+  if (local) input.value = formatFieldValue(raw, field);
+  else setField(field.key, raw, false);
   if (start === null) return;
   const position = (offset) => {
     if (['money', 'decimal', 'tel', 'dateText'].includes(field.type)) {
@@ -114,23 +115,23 @@ function stopVoice() {
     rec.abort();
   }
 }
-function startVoice(key) {
+function startVoice(key, target = {}) {
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!Recognition)
     return showToast(
       'Dictado no disponible',
       'Usa Chrome o Edge y permite el acceso al micrófono.',
     );
-  if (activeRecognition?.fieldKey === key) {
+  const input = target.input || document.getElementById(key),
+    button = target.button || document.querySelector('.voice[data-key="' + key + '"]');
+  if (activeRecognition?.fieldKey === input.id) {
     stopVoice();
     return;
   }
   stopVoice();
-  const input = document.getElementById(key),
-    button = document.querySelector('.voice[data-key="' + key + '"]');
-  const mode = fields.find((f) => f.key === key).voice,
+  const mode = (target.field || fields.find((f) => f.key === key)).voice,
     rec = new Recognition();
-  rec.fieldKey = key;
+  rec.fieldKey = input.id;
   activeRecognition = rec;
   let position = input.selectionStart ?? input.value.length;
   rec.lang = 'es-MX';
@@ -154,6 +155,7 @@ function startVoice(key) {
           .replace(/\s/g, '');
       if (mode === 'digits') spoken = spoken.replace(/\D/g, '');
       if (mode === 'number') spoken = MetlifeFormCore.spokenNumber(spoken);
+      if (mode === 'date') spoken = MetlifeFormCore.spokenDate(spoken);
       if (mode === 'email')
         spoken = spoken
           .replace(/\s*arroba\s*/gi, '@')

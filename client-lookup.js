@@ -103,10 +103,10 @@
       if (token === searchGeneration) $('#lookupMoreBtn').disabled = false;
     }
   }
-  function search(key) {
+  function search(key, query) {
     reset(true);
     searchKey = key;
-    searchText = $('#' + key).value.trim();
+    searchText = String(query ?? $('#' + key).value).trim();
     if (!searchText)
       return status(
         key === 'nombre'
@@ -126,5 +126,9 @@
     if (['poliza', 'nombre', 'telefono'].includes(event.target.id)) reset(false);
   });
   $('#lookupMoreBtn').onclick = () => page(true);
+  window.metlifeLookupSearch = (key, query) => {
+    search(key, query);
+    $('#clientLookup').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
   window.addEventListener('metlife:form-reset', () => reset(true));
 })();

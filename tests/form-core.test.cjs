@@ -1,6 +1,11 @@
 const test = require('node:test'),
   assert = require('node:assert/strict');
 const core = require('../form-core.js');
+test('dictated dates preserve day month and year including spoken Spanish month names', () => {
+  assert.equal(core.spokenDate('once de noviembre de dos mil veinticinco'), '11/11/2025');
+  assert.equal(core.spokenDate('11 de noviembre de 2025'), '11/11/2025');
+  assert.equal(core.spokenDate('11 guion 11 guion 2025'), '11/11/2025');
+});
 test('email removes accents; identifier suggestions never expose suffix', () => {
   assert.equal(core.normalize('Jósé @Gmáil.com', 'correo'), 'jose@gmail.com');
   assert.equal(core.prefix('SABE800311LN2'), 'SABE800311');

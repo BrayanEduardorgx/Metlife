@@ -7,13 +7,17 @@ function setField(key, value, remember = true) {
   if (!el) return;
   if (remember) fieldUndo[key] = el.value;
   const f = fields.find((x) => x.key === key);
-  let v = MetlifeFormCore.normalize(value, key);
+  const v = formatFieldValue(value, f || { key });
+  if (el.value !== v) el.value = v;
+  updateSuggestions();
+}
+function formatFieldValue(value, f) {
+  let v = MetlifeFormCore.normalize(value, f.key);
   if (f?.type === 'dateText') v = formatDate(v);
   if (f?.type === 'tel') v = v.replace(/\D/g, '');
   if (f?.type === 'money') v = formatMoney(v);
   if (f?.type === 'decimal') v = v.replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1');
-  if (el.value !== v) el.value = v;
-  updateSuggestions();
+  return v;
 }
 function formatMoney(v) {
   const clean = String(v).replace(/[^\d.]/g, '');

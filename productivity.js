@@ -133,13 +133,13 @@ function renderVoiceStatus() {
   const key = activeRecognition?.fieldKey;
   get('voiceStatus').hidden = !key;
   get('voiceStatusText').textContent = key
-    ? 'Escuchando: ' + fields.find((f) => f.key === key).label
+    ? 'Escuchando: ' + (document.querySelector('label[for="' + key + '"]')?.textContent || key)
     : '';
 }
 const baseStartVoice = startVoice,
   baseStopVoice = stopVoice;
-startVoice = function (key) {
-  baseStartVoice(key);
+startVoice = function (key, target) {
+  baseStartVoice(key, target);
   renderVoiceStatus();
   if (activeRecognition) {
     const rec = activeRecognition,
@@ -225,6 +225,10 @@ document.addEventListener(
       return;
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'g') {
       e.preventDefault();
+      if (e.target.closest('#scanReview')) {
+        if (!get('applyScanBtn').disabled) get('applyScanBtn').click();
+        return;
+      }
       if (!get('clientForm').querySelector('.save-btn').disabled)
         get('clientForm').requestSubmit(get('clientForm').querySelector('.save-btn'));
       return;
