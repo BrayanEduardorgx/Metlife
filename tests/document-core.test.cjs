@@ -1,6 +1,28 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const core = require('../document-core.js');
+test('conflicting handwritten amounts and identifiers require review instead of automatic capture', () => {
+  const disputed = core.reconcileReadings('suma', '6000000000', '600,000.00');
+  assert.equal(disputed.value, '');
+  assert.equal(disputed.doubt, true);
+  assert.equal(disputed.candidates.length, 2);
+  assert.equal(core.reconcileReadings('suma', '100,000', '100000.00').value, '100000');
+  assert.equal(core.reconcileReadings('rfc', 'ABCD010101XYZ', 'ABCD010101XY2').value, '');
+  assert.equal(core.reconcileReadings('correo', 'unreadable', '').value, '');
+});
+test('application date comes from the handwritten footer, never date of birth', () => {
+  assert.equal(
+    core.valuesToForm({ comunidad: 'Villa Ejemplo, Ver. A 11de Noviembre de 2025' }).fecha,
+    '11/11/2025',
+  );
+  assert.equal(core.sanitize('fecha', 'Lugar y fecha de nacimiento: 07/01/1994'), '');
+  assert.equal(core.sanitize('fecha', '31 de Febrero de 2025'), '');
+  assert.equal(core.valuesToForm({ fecha: '', comunidad: 'Villa Ejemplo, 11/11/2025' }).fecha, '');
+  assert.equal(
+    core.valuesToForm({ comunidad: 'Villa Ejemplo, Ver. A 11de Noviembre de 2025' }).comunidad,
+    'VILLA EJEMPLO',
+  );
+});
 test('name uses paternal, maternal, given names; manual fields remain empty', () => {
   const form = core.valuesToForm({
     paterno: 'Pérez',

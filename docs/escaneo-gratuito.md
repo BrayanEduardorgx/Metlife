@@ -5,8 +5,8 @@ El OCR se ejecuta en el navegador con Tesseract.js 6.0.1 (español). No usa una 
 ## Uso
 
 1. Abrir cámara o subir JPG, PNG o WebP (hasta 20 MB).
-2. Revisar la orientación y pulsar Analizar documento. La lectura rápida es la opción predeterminada; letra a mano sigue siendo experimental.
-3. El formato Protección Futura 20 se reconoce por varias etiquetas impresas distribuidas en la hoja. Se ajustan automáticamente trece zonas y las tres casillas superiores. Si no hay suficientes referencias, continúa el lector general y permite seleccionar zonas manualmente. Revisar los valores sugeridos.
+2. Revisar la orientación y pulsar Analizar documento. Letra a mano por zonas es la opción predeterminada y sigue siendo experimental.
+3. El formato Protección Futura 20 se reconoce por varias etiquetas impresas distribuidas en la hoja. Se ajustan las zonas de escritura y las tres casillas superiores. Las etiquetas sirven para ubicar los datos, no para rellenarlos. Si no hay suficientes referencias, se usan las zonas recordadas compatibles o se pide seleccionar zonas manualmente.
 4. Para una línea que faltó, pulsar Leer zona, seleccionar SOLO la escritura y elegir Lectura rápida o Leer letra a mano.
 5. Si está marcada Recordar las zonas, se guarda en Firebase únicamente la geometría del recorte (sin imagen ni texto), compartida entre dispositivos. Las siguientes fotografías completas, derechas y del mismo formato/aspecto reutilizan esos recortes.
 6. Pasar al formulario o al cuadro Autollenar con texto. Nada se guarda como registro hasta pulsar Guardar registro.
@@ -17,7 +17,7 @@ En Protección Futura 20, las casillas se leen buscando tinta en el interior de 
 
 ## Reglas de campos
 
-La revisión sigue el orden del formulario: póliza; apellido paterno, materno y nombres; negocio; suma; prima excedente; vendida; teléfono; RFC; CURP; correo; trabajo; comunidad. Los campos manuales mantienen sus posiciones en el formulario y Excel.
+La revisión sigue el orden del formulario: póliza; apellido paterno, materno y nombres; negocio; suma; prima excedente; vendida; teléfono; fecha; RFC; CURP; correo; trabajo; comunidad. Los campos manuales mantienen sus posiciones en el formulario y Excel.
 
 VENDIDA se intenta extraer de la zona superior de la hoja, encima de las casillas, sin exigir un color de tinta concreto. El valor es opcional en la lectura: se puede corregir o completar manualmente. Nunca se incluye un nombre fijo en la plantilla.
 
@@ -26,13 +26,16 @@ VENDIDA se intenta extraer de la zona superior de la hoja, encima de las casilla
 - Suma: Suma asegurada básica (BAS).
 - Prima excedente, celular, RFC, CURP, email y nombre de la empresa: sus apartados respectivos.
 - Comunidad: texto de Lugar y fecha, retirando la fecha si se reconoce su separación.
-- Siempre manuales y vacíos después de escanear: PRIMA, MEDIO, FECHA, TALÓN/CUENTA y ESTATUS.
+- Fecha: únicamente la fecha de solicitud en Lugar y fecha al pie; se convierte a día/mes/año. No se toma la fecha de nacimiento.
+- Siempre manuales y vacíos después de escanear: PRIMA, MEDIO, TALÓN/CUENTA y ESTATUS. No se toman sueldo, otras coberturas ni beneficiarios.
+
+Los recortes para lectura se aclaran y se eliminan márgenes blancos; la evidencia visible conserva la foto original. También se intenta leer manuscritos en los campos numéricos. Se compara la lectura manuscrita con Tesseract por zona. Cuando difieren, se muestran un aviso y botones para elegir las alternativas. En importes, teléfono, RFC, CURP, póliza y fecha, una discrepancia deja el campo vacío hasta revisarlo. Coincidir no garantiza exactitud: siempre hay que comprobar con el recorte. No se reconstruyen letras ilegibles a partir de otros campos ni se incorporan valores fijos del ejemplo.
 
 La lupa busca en todos los registros recibidos de la nube, incluidos otros lotes del historial. Una coincidencia se carga; varias muestran una lista paginada; ninguna muestra aviso naranja. Recuperar no modifica el registro original ni guarda automáticamente otro.
 
 ## Validación y límites
 
-Pruebas: node --test tests/document-core.test.cjs. La prueba de navegador de desarrollo en .qa/cloud-browser.cjs usa datos sintéticos y no se publica. Verifica búsqueda, OCR real de una imagen de prueba, campos manuales y ancho móvil. Se calibró la geometría con la foto proporcionada en el proyecto. La prueba local .qa/sample-browser.cjs usa esa foto contra una base de datos simulada, nunca contra los registros reales. Detectó el formato y la casilla Incremento; la lectura rápida tardó aproximadamente 13 segundos en la computadora de prueba. La lectura experimental de manuscritos tardó unos 49 segundos y produjo errores importantes. La transcripción completa NO está validada como precisa: persisten campos vacíos y caracteres incorrectos, especialmente códigos, importes y escritura cursiva. Los tiempos dependen del equipo y de la descarga inicial.
+Pruebas: `npm run check` y `npm run test:browser`. Se calibró la geometría con la foto proporcionada en el proyecto. La prueba privada `.qa/sample-browser.cjs` usa esa foto contra una base de datos simulada, nunca contra los registros reales. Comprueba alineación, casilla marcada, revisión, selección de candidatos y campos manuales. La lectura manuscrita por zonas con comparación tardó aproximadamente 52 segundos en la computadora de prueba, sin errores de ejecución. La transcripción completa NO está validada como precisa: persisten campos vacíos y caracteres incorrectos, especialmente códigos, importes y escritura cursiva. Se probó también un modelo mayor y se descartó porque empeoró los resultados. La comprobación de funcionamiento no equivale a exactitud de transcripción. Los tiempos dependen del equipo y de la descarga inicial.
 
 Fuentes: https://github.com/naptha/tesseract.js/blob/master/docs/api.md ; https://huggingface.co/Xenova/trocr-small-handwritten ; https://huggingface.co/microsoft/trocr-small-handwritten
 

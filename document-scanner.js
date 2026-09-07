@@ -23,7 +23,9 @@
             source:
               field.key === 'vendida'
                 ? 'Nombre escrito en la zona superior de la hoja, en cualquier color de tinta o lápiz.'
-                : 'En la hoja: ' + def.label,
+                : field.key === 'fecha'
+                  ? 'Fecha escrita en Lugar y fecha al pie de la hoja.'
+                  : 'En la hoja: ' + def.label,
           },
         ]
       : [];
@@ -46,6 +48,7 @@
     reviewReady = false;
   let detectedTemplate = null,
     proofs = {};
+  let readingChecks = {};
   let zones = window.metlifeCloud?.state.zones || {};
   window.addEventListener('metlife:zones', (event) => {
     zones = event.detail || {};
@@ -170,6 +173,7 @@
   }
   function clearReview() {
     proofs = {};
+    readingChecks = {};
     detectedTemplate = null;
     reviewReady = false;
     $('#scanRawText').value = '';
@@ -328,8 +332,13 @@
     }
     return new Promise((resolve, reject) => {
       handJob = { id, resolve, reject };
-      const pixels = crop.getContext('2d').getImageData(0, 0, crop.width, crop.height).data.buffer;
-      handWorker.postMessage({ id, pixels, width: crop.width, height: crop.height }, [pixels]);
+      const prepared = window.MetlifeTemplate.prepareWriting(
+        crop.getContext('2d').getImageData(0, 0, crop.width, crop.height),
+      );
+      const pixels = prepared.data.buffer;
+      handWorker.postMessage({ id, pixels, width: prepared.width, height: prepared.height }, [
+        pixels,
+      ]);
     });
   }
   function validRect(rect) {
@@ -451,6 +460,9 @@
           },
         }));
       } else {
+        values = {};
+        result.warning =
+          'No se identificaron todas las zonas del formato. Selecciona la escritura con «Leer zona»; el texto impreso no se trasladará como dato del cliente.';
         jobs = Object.entries(zones).filter(
           ([key, zone]) =>
             core.definitions.some((d) => d.key === key) &&
@@ -488,7 +500,7 @@
           try {
             let text;
             const numeric = ['suma', 'primaExcedente', 'telefono'].includes(key);
-            if (!numeric && zone.mode === 'hand' && !handUnavailable) {
+            if (zone.mode === 'hand' && !handUnavailable) {
               try {
                 text = await readHand(crop, id);
               } catch (error) {
@@ -497,15 +509,23 @@
                 partial = true;
               }
             }
-            if (text === undefined) {
-              await reader.setParameters({
-                tessedit_pageseg_mode: '7',
-                tessedit_char_whitelist: numeric ? '0123456789., ' : '',
-              });
-              text = (await reader.recognize(crop)).data.text;
-            }
+            await reader.setParameters({
+              tessedit_pageseg_mode: '7',
+              tessedit_char_whitelist: numeric ? '0123456789., ' : '',
+            });
+            const prepared = window.MetlifeTemplate.prepareWriting(
+              crop.getContext('2d').getImageData(0, 0, crop.width, crop.height),
+            );
+            const clean = document.createElement('canvas');
+            clean.width = prepared.width;
+            clean.height = prepared.height;
+            clean
+              .getContext('2d')
+              .putImageData(new ImageData(prepared.data, prepared.width, prepared.height), 0, 0);
+            const fast = (await reader.recognize(clean)).data.text;
             if (id !== generation) return;
-            values[key] = core.sanitize(key, text);
+            readingChecks[key] = core.reconcileReadings(key, text, fast);
+            values[key] = readingChecks[key].value;
           } catch {
             if (id !== generation) return;
             partial = true;
@@ -645,6 +665,24 @@
         hint.className = 'scan-doubt';
       }
       box.append(hint);
+      const check = readingChecks[def.key];
+      if (check?.doubt) {
+        hint.textContent =
+          'Los lectores no coinciden. Comprueba la escritura en el recorte y elige o corrige el dato.';
+        hint.className = 'scan-doubt';
+        for (const candidate of check.candidates) {
+          const choose = document.createElement('button');
+          choose.type = 'button';
+          choose.className = 'secondary scan-candidate';
+          choose.textContent = 'Usar: ' + candidate;
+          choose.onclick = () => {
+            input.value = candidate;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            hint.textContent = 'Seleccionado por ti. Revisa antes de pasar al formulario.';
+          };
+          box.append(choose);
+        }
+      }
       if (def.key !== 'negocio') {
         const button = document.createElement('button');
         button.type = 'button';
@@ -809,10 +847,11 @@
       mode === 'hand' ? 'Preparando lector de letra a mano…' : 'Leyendo zona…';
     try {
       const crop = cropImage(cropRect);
-      let text = '';
+      let text,
+        fast = '';
       if (hasInk(crop)) {
         if (mode === 'hand') text = await readHand(crop, id);
-        else {
+        {
           const reader = await getReader(id);
           await reader.setParameters({
             tessedit_pageseg_mode: '7',
@@ -820,19 +859,17 @@
               ? '0123456789., '
               : '',
           });
-          text = (await reader.recognize(crop)).data.text;
+          fast = (await reader.recognize(crop)).data.text;
         }
       }
       if (id !== generation) return;
-      el('scan-' + cropKey).value = core.sanitize(cropKey, text);
+      readingChecks[cropKey] = core.reconcileReadings(cropKey, text, fast);
+      el('scan-' + cropKey).value = readingChecks[cropKey].value;
       proofs[cropKey] = { src: crop.toDataURL('image/jpeg', 0.9), full: false };
-      const preview = el('scan-' + cropKey)
-        .closest('.scan-review-field')
-        .querySelector('.scan-proof');
-      if (preview)
-        preview.replaceChildren(
-          proofButton(cropKey, reviewDefs.find((d) => d.key === cropKey).label),
-        );
+      const current = Object.fromEntries(
+        reviewDefs.map((def) => [def.key, el('scan-' + def.key).value]),
+      );
+      showReview(current);
       let zoneSaved = true;
       if ($('#rememberScanZones').checked) {
         try {

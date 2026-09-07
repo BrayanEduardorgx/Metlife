@@ -2,6 +2,27 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const template = require('../document-template.js'),
   core = require('../document-core.js');
+test('handwriting preprocessing preserves colored ink without changing the source crop', () => {
+  const width = 80,
+    height = 30,
+    data = new Uint8ClampedArray(width * height * 4).fill(220);
+  for (let i = 3; i < data.length; i += 4) data[i] = 255;
+  for (let y = 6; y < 20; y++)
+    for (let x = 20; x < 24; x++) {
+      const i = (y * width + x) * 4;
+      data[i] = 170;
+      data[i + 1] = 90;
+      data[i + 2] = 150;
+    }
+  const before = new Uint8ClampedArray(data),
+    result = template.prepareWriting({ data, width, height });
+  assert.deepEqual(data, before);
+  assert(template.hasWriting(result));
+  assert(result.width < width);
+  assert(result.height < height);
+  assert.equal(result.data.length, result.width * result.height * 4);
+  assert(result.data.some((level, index) => index % 4 !== 3 && level < 80));
+});
 const landmarks = {
   poliza: [920.5, 254.5],
   paterno: [231, 354.5],

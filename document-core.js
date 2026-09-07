@@ -1,7 +1,7 @@
 /* Pure rules shared by OCR, review and client lookup. No network or storage. */
 (function (root) {
   'use strict';
-  const manual = ['prima', 'medio', 'fecha', 'talon', 'estatus'];
+  const manual = ['prima', 'medio', 'talon', 'estatus'];
   const definitions = [
     {
       key: 'poliza',
@@ -18,6 +18,7 @@
     },
     { key: 'primaExcedente', label: 'PRIMA EXCEDENTE', pattern: /PRIMA\s+EX[CE]*DENTE\s*:?/g },
     { key: 'vendida', label: 'VENDIDA', pattern: /\bVENDIDA\s*:?/g },
+    { key: 'fecha', label: 'FECHA DE SOLICITUD', pattern: /\bFECHA\s+DE\s+SOLICITUD\s*:?/g },
     { key: 'telefono', label: 'CELULAR', pattern: /\bCELULAR\s*:?/g },
     { key: 'rfc', label: 'RFC', pattern: /\bR\.?\s*F\.?\s*C\.?\s*:?/g },
     { key: 'curp', label: 'CURP', pattern: /\bC\.?\s*U\.?\s*R\.?\s*P\.?\s*:?/g },
@@ -69,11 +70,17 @@
   function sanitize(key, value) {
     const v = clean(value);
     if (manual.includes(key)) return '';
+    if (key === 'fecha') return footerDate(v);
     if (key === 'negocio')
       return ['NUEVA', 'INCREMENTO', 'INCLUSION'].includes(normalize(v)) ? normalize(v) : '';
     if (['suma', 'primaExcedente'].includes(key)) return amount(v);
     if (key === 'telefono') return /^[+\d() .-]+$/.test(v) ? v.replace(/\D/g, '') : '';
-    if (key === 'correo') return v.toLowerCase().replace(/\s/g, '');
+    if (key === 'correo')
+      return v
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/\s/g, '');
     if (['rfc', 'curp', 'poliza'].includes(key)) return v.toUpperCase().replace(/\s/g, '');
     if (key === 'comunidad')
       return v
@@ -94,8 +101,49 @@
       .filter(Boolean)
       .join(' ');
     result.negocio = sanitize('negocio', values.negocio);
+    result.fecha = footerDate(Object.hasOwn(values, 'fecha') ? values.fecha : values.comunidad);
     manual.forEach((k) => (result[k] = ''));
     return result;
+  }
+  function footerDate(value) {
+    const text = normalize(value);
+    if (/NACIMIENTO/.test(text)) return '';
+    const months = [
+      'ENERO',
+      'FEBRERO',
+      'MARZO',
+      'ABRIL',
+      'MAYO',
+      'JUNIO',
+      'JULIO',
+      'AGOSTO',
+      'SEPTIEMBRE',
+      'OCTUBRE',
+      'NOVIEMBRE',
+      'DICIEMBRE',
+    ];
+    const written = text.match(/\b(\d{1,2})\s*(?:DE\s*)?([A-Z]+)\s*(?:DE\s*)?(\d{4})\b/),
+      numeric = text.match(/\b(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})\b/);
+    let day, month, year;
+    if (written) {
+      day = Number(written[1]);
+      month = months.indexOf(written[2]) + 1;
+      year = Number(written[3]);
+    } else if (numeric) {
+      day = Number(numeric[1]);
+      month = Number(numeric[2]);
+      year = Number(numeric[3]);
+    } else return '';
+    if (
+      year < 1900 ||
+      year > 2199 ||
+      month < 1 ||
+      month > 12 ||
+      day < 1 ||
+      day > new Date(Date.UTC(year, month, 0)).getUTCDate()
+    )
+      return '';
+    return String(day).padStart(2, '0') + '/' + String(month).padStart(2, '0') + '/' + year;
   }
   function anchors(text) {
     // Keep character positions stable so slices refer to the original accented text.
@@ -266,6 +314,7 @@
     return { ...result, regions };
   }
   const api = {
+    reconcileReadings,
     extractLayout,
     definitions,
     manual,
@@ -277,6 +326,30 @@
     flattenWords,
     fieldRegions,
   };
+  function reconcileReadings(key, hand, fast) {
+    const valid = (value) => {
+      const v = sanitize(key, value);
+      if (!v) return '';
+      if (key === 'correo' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return '';
+      if (key === 'telefono' && v.length !== 10) return '';
+      if (['poliza', 'rfc', 'curp'].includes(key) && !/^[A-Z0-9Ñ&]+$/.test(v)) return '';
+      return v;
+    };
+    const a = valid(hand),
+      b = valid(fast),
+      candidates = [...new Set([a, b].filter(Boolean))];
+    const compare = (value) =>
+      ['suma', 'primaExcedente'].includes(key) && value ? String(Number(value)) : normalize(value);
+    const agrees = !!a && compare(a) === compare(b),
+      sensitive = ['suma', 'primaExcedente', 'telefono', 'rfc', 'curp', 'poliza', 'fecha'].includes(
+        key,
+      );
+    return {
+      value: hand !== undefined && sensitive && !agrees ? '' : a || b,
+      candidates,
+      doubt: hand !== undefined && !agrees,
+    };
+  }
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.MetlifeDocument = api;
 })(typeof window !== 'undefined' ? window : globalThis);

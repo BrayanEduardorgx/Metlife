@@ -15,7 +15,7 @@
     footerDate: [373.5, 1546],
   };
   const areas = {
-    vendida: [430, 137, 414, 94],
+    vendida: [510, 150, 320, 75],
     poliza: [970, 234, 169, 40],
     paterno: [104, 290, 236, 54],
     materno: [514, 276, 240, 59],
@@ -28,6 +28,7 @@
     suma: [166, 717, 150, 30],
     primaExcedente: [275, 968, 90, 39],
     comunidad: [144, 1489, 582, 51],
+    fecha: [144, 1489, 582, 51],
   };
   const boxes = {
     NUEVA: [359, 253, 21, 21],
@@ -270,6 +271,7 @@
     };
   }
   const api = {
+    prepareWriting,
     toReference,
     hasWriting,
     locate,
@@ -279,6 +281,81 @@
     reference,
     areas,
   };
+  function prepareWriting(image) {
+    const { width, height } = image,
+      data = new Uint8ClampedArray(image.data),
+      hist = new Uint32Array(256);
+    let count = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      const level = Math.min(data[i], data[i + 1], data[i + 2]);
+      if (level < 248) {
+        hist[level]++;
+        count++;
+      }
+    }
+    let paper = 235,
+      total = 0;
+    for (let i = 0; i < 248; i++) {
+      total += hist[i];
+      if (count && total >= count * 0.85) {
+        paper = i;
+        break;
+      }
+    }
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i],
+        g = data[i + 1],
+        b = data[i + 2],
+        marker = g > 160 && g > r * 1.4 && g > b * 1.25;
+      const level = marker
+        ? 255
+        : Math.max(0, Math.min(255, 255 - Math.max(0, paper - Math.min(r, g, b) - 12) * 3.2));
+      data[i] = data[i + 1] = data[i + 2] = level;
+      data[i + 3] = 255;
+    }
+    for (let y = Math.floor(height * 0.65); y < height; y++) {
+      let start = -1;
+      for (let x = 0; x <= width; x++) {
+        const dark = x < width && data[(y * width + x) * 4] < 100;
+        if (dark && start < 0) start = x;
+        if (!dark && start >= 0) {
+          if (x - start > width * 0.6)
+            for (let col = start; col < x; col++) {
+              const i = (y * width + col) * 4;
+              data[i] = data[i + 1] = data[i + 2] = 255;
+            }
+          start = -1;
+        }
+      }
+    }
+    let left = width,
+      right = -1,
+      top = height,
+      bottom = -1;
+    for (let y = 0; y < height; y++)
+      for (let x = 0; x < width; x++) {
+        if (data[(y * width + x) * 4] < 170) {
+          left = Math.min(left, x);
+          right = Math.max(right, x);
+          top = Math.min(top, y);
+          bottom = Math.max(bottom, y);
+        }
+      }
+    if (right < left) return { data, width, height };
+    const padding = Math.max(4, Math.round((bottom - top + 1) * 0.1));
+    left = Math.max(0, left - padding);
+    right = Math.min(width - 1, right + padding);
+    top = Math.max(0, top - padding);
+    bottom = Math.min(height - 1, bottom + padding);
+    const trimmedWidth = right - left + 1,
+      trimmedHeight = bottom - top + 1;
+    const trimmed = new Uint8ClampedArray(trimmedWidth * trimmedHeight * 4);
+    for (let y = 0; y < trimmedHeight; y++) {
+      const start = ((top + y) * width + left) * 4;
+      trimmed.set(data.subarray(start, start + trimmedWidth * 4), y * trimmedWidth * 4);
+    }
+    return { data: trimmed, width: trimmedWidth, height: trimmedHeight };
+  }
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.MetlifeTemplate = api;
 })(typeof window !== 'undefined' ? window : globalThis);
