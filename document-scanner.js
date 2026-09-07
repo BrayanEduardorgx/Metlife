@@ -75,6 +75,7 @@
       'forgetScanZones',
       'nativeCameraBtn',
       'scanReadingMode',
+      'pasteDataBtn',
     ])
       el(id).disabled = value;
     $('#cancelScanBtn').classList.toggle('hidden', !value);
@@ -180,6 +181,8 @@
     detectedTemplate = null;
     reviewReady = false;
     $('#scanRawText').value = '';
+    $('#scanPasteNotes').replaceChildren();
+    $('#scanPasteNotes').classList.add('hidden');
     regions = [];
     $('#scanReview').classList.add('hidden');
     $('#scanReviewFields').replaceChildren();
@@ -795,7 +798,7 @@
           box.append(choose);
         }
       }
-      if (def.key !== 'negocio' && core.definitions.some((d) => d.key === def.key)) {
+      if (canvas && def.key !== 'negocio' && core.definitions.some((d) => d.key === def.key)) {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'link-btn read-zone';
@@ -1098,6 +1101,78 @@
     status('Toma una foto o selecciona una imagen para comenzar.');
   };
   $('#analyzeDocumentBtn').onclick = analyze;
+  $('#copyInstructionsBtn').onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(window.MetlifeTranscription.instructions);
+      showToast(
+        'Instrucciones copiadas',
+        'Pégalas junto con la foto al solicitar la transcripción. Después copia la respuesta y usa Pegar datos.',
+      );
+    } catch {
+      $('#instructionsText').value = window.MetlifeTranscription.instructions;
+      $('#instructionsDialog').showModal();
+      $('#instructionsText').focus();
+      $('#instructionsText').select();
+    }
+  };
+  $('#closeInstructionsBtn').onclick = () => $('#instructionsDialog').close();
+  $('#pasteDataBtn').onclick = async () => {
+    if (busy) return;
+    stopVoice();
+    const dialog = $('#pasteDataDialog'),
+      input = $('#pasteDataText');
+    dialog.showModal();
+    input.focus();
+    $('#pasteDataStatus').textContent =
+      'Pega el texto y pulsa Revisar datos. También puedes usar Ctrl+V.';
+    const before = input.value;
+    try {
+      const text = await navigator.clipboard.readText();
+      if (dialog.open && input.value === before && !before) input.value = text;
+    } catch {
+      /* Manual paste remains available when clipboard permission is denied. */
+    }
+  };
+  $('#closePasteDataBtn').onclick = () => $('#pasteDataDialog').close();
+  $('#reviewPastedDataBtn').onclick = () => {
+    if (busy) return;
+    try {
+      const parsed = window.MetlifeTranscription.parse($('#pasteDataText').value);
+      if (
+        reviewReady &&
+        reviewDefs.some((def) => el('scan-' + def.key)?.value) &&
+        !confirm('¿Reemplazar los datos de la revisión por el texto pegado?')
+      )
+        return;
+      clearReview();
+      for (const key of Object.keys(parsed.values)) scanSources[key] = 'Texto pegado';
+      showReview(parsed.values);
+      setBusy(false);
+      const notes = $('#scanPasteNotes');
+      if (parsed.doubts.length) {
+        const title = document.createElement('strong');
+        title.textContent = 'Observaciones para revisar';
+        notes.append(title);
+        const list = document.createElement('ul');
+        for (const doubt of parsed.doubts) {
+          const item = document.createElement('li');
+          item.textContent = doubt;
+          list.append(item);
+        }
+        notes.append(list);
+        notes.classList.remove('hidden');
+      }
+      $('#scanRawText').value = $('#pasteDataText').value;
+      $('#pasteDataDialog').close();
+      $('#pasteDataText').value = '';
+      $('#scanReview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      status(
+        'Datos preparados para revisar. Pulsa Mostrar datos en el formulario cuando termines. Todavía no se ha guardado ningún registro.',
+      );
+    } catch (error) {
+      $('#pasteDataStatus').textContent = error.message;
+    }
+  };
   $('#cancelScanBtn').onclick = () => cancel();
   $('#applyScanBtn').onclick = applyReview;
   $('#scanTextBtn').onclick = textReview;

@@ -379,6 +379,14 @@ const server = http.createServer(async (req, res) => {
       'DESPUES DE CANCELAR',
     );
     await require('./scanner-fields.cjs')(page);
+    const pastePage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    pastePage.on('pageerror', (e) => errors.push(e.message));
+    pastePage.on('dialog', (d) => d.accept());
+    await pastePage.goto('http://127.0.0.1:4189');
+    await pastePage.locator('#app').waitFor({ state: 'visible' });
+    assert.equal(await pastePage.evaluate(() => typeof window.MetlifeTranscription), 'undefined');
+    await require('./pasted-data.cjs')(pastePage);
+    await pastePage.close();
     await page.locator('#scanReview').evaluate((el) => el.scrollIntoView({ block: 'start' }));
     await page.screenshot({ path: path.join(root, '.qa', 'scanner-fields-desktop.png') });
     await page.setViewportSize({ width: 390, height: 844 });

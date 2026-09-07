@@ -17,6 +17,12 @@ En Protección Futura 20, las casillas se leen buscando tinta en el interior de 
 
 ## Reglas de campos
 
+### Transcripción pegada
+
+Los botones **Copiar instrucciones** y **Pegar datos** permiten usar una transcripción preparada fuera de la página. El primero copia las reglas de ubicación y una estructura JSON de un solo documento. El segundo abre un cuadro editable; intenta leer el portapapeles y permite pegar manualmente si el navegador no da permiso. **Revisar datos** valida la estructura y abre los campos de revisión incluso sin subir una imagen ni ejecutar el lector. Las dudas se muestran aparte, como texto, y no entran en las celdas.
+
+Los teléfonos e identificadores se reciben como textos para conservar ceros iniciales y valores incompletos. No se aceptan importes con símbolos dudosos que pudieran convertirse en otro número al formatearlos. Una respuesta inválida conserva la revisión anterior. El botón **Mostrar datos en el formulario** incorpora la revisión; el registro solo se guarda mediante el guardado habitual. Este flujo no llama a ningún servicio externo ni necesita claves de API; el usuario copia las instrucciones y la respuesta manualmente.
+
 La revisión sigue el orden del formulario: póliza; apellido paterno, materno y nombres; negocio; suma; prima excedente; vendida; teléfono; fecha; RFC; CURP; correo; trabajo; comunidad. Los campos manuales mantienen sus posiciones en el formulario y Excel.
 
 VENDIDA se intenta extraer de la zona superior de la hoja, encima de las casillas, sin exigir un color de tinta concreto. El valor es opcional en la lectura: se puede corregir o completar manualmente. Nunca se incluye un nombre fijo en la plantilla.

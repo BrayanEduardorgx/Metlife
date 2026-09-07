@@ -1777,6 +1777,23 @@ main {
   white-space: normal;
   overflow-wrap: anywhere;
 }
+#pasteDataText,
+#instructionsText {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-height: 180px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--input);
+  color: var(--ink);
+  font: inherit;
+  resize: vertical;
+}
+#pasteDataStatus {
+  overflow-wrap: anywhere;
+}
 .scan-review-field label {
   display: block;
   font-size: 10px;
